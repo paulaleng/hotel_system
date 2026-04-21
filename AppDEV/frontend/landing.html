@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Grand Solace Hotel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header>
+    <div class="logo">Welcome!</div>
+
+    <div class="nav-links">
+        <a href="admin_login.html">Admin</a>
+        <a href="login.html">Login</a>
+    </div>
+</header>
+
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-text">
+        <h1>Grand Solace Hotel</h1>
+        <p>
+            Experience elegance, peace, and comfort in every stay.
+            Your perfect getaway begins here.
+        </p>
+        <button onclick="goToLogin()">Book Now</button>
+    </div>
+</section>
+
+
+<!-- ROOMS -->
+<section class="rooms">
+    <h2>Featured Rooms</h2>
+
+    <div class="room-container">
+
+        <div class="card">
+            <img src="images/standard.png" alt="Standard Room">
+            <h3>Standard Room</h3>
+        </div>
+
+        <div class="card">
+            <img src="images/deluxe.png" alt="Deluxe Room">
+            <h3>Deluxe Room</h3>
+        </div>
+
+        <div class="card">
+            <img src="images/superior.png" alt="Superior Room">
+            <h3>Superior Room</h3>
+        </div>
+
+        <div class="card">
+            <img src="images/suite.png" alt="Suite Room">
+            <h3>Suite Room</h3>
+        </div>
+
+        <div class="card">
+            <img src="images/executive.png" alt="Executive Room">
+            <h3>Executive Room</h3>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- SCRIPT -->
+<script>
+function goToLogin() {
+    window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>
