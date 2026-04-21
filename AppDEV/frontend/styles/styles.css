@@ -54,7 +54,7 @@ header {
 /* HERO */
 .hero {
     height: 100vh;
-    background: url("images/hotel.png") no-repeat center/cover;
+    background: url("../images/hotel.png") no-repeat center/cover;
     display: flex;
     align-items: center;
     justify-content: flex-start; /* LEFT SIDE */
