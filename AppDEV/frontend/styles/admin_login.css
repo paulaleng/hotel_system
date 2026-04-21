@@ -1,0 +1,103 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Page Background */
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(rgba(10,10,20,0.88), rgba(10,10,20,0.96)),
+                url("your-hotel-image.jpg") no-repeat center/cover;
+}
+
+/* Container */
+.login-container {
+    width: 100%;
+    max-width: 560px;
+}
+
+/* Login Box */
+.login-box {
+    background: #0f172a;
+    padding: 70px 60px;
+    border-radius: 18px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.65);
+    text-align: center;
+    color: #fff;
+}
+
+/* Title */
+.login-box h1 {
+    font-size: 38px;
+    margin-bottom: 8px;
+}
+
+/* Subtitle */
+.login-box p {
+    font-size: 16px;
+    color: #c8a96a;
+    margin-bottom: 35px;
+}
+
+/* Input Group */
+.input-group {
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+/* Labels */
+.input-group label {
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: block;
+    color: #ddd;
+}
+
+/* Inputs */
+.input-group input {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background: #1e1e2f;
+    color: white;
+}
+
+/* Button */
+button {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    background: #c8a96a;
+    border: none;
+    border-radius: 8px;
+    color: #111;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Button Hover */
+button:hover {
+    background: #b89658;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .login-box {
+        padding: 50px 30px;
+    }
+
+    .login-box h1 {
+        font-size: 30px;
+    }
+}

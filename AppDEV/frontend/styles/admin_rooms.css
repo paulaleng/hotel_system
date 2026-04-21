@@ -1,0 +1,259 @@
+/* ================= RESET ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+/* ================= LAYOUT ================= */
+.container {
+  display: flex;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: #020617;
+  padding: 20px;
+}
+
+.logo {
+  color: #d4af37;
+  margin-bottom: 30px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar ul li {
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #cbd5f5;
+  transition: 0.3s;
+}
+
+.sidebar ul li:hover,
+.sidebar ul li.active {
+  background: #d4af37;
+  color: #020617;
+}
+
+/* ================= MAIN ================= */
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* ================= TOPBAR ================= */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.topbar input {
+  width: 300px;
+  max-width: 40%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #1e293b;
+  color: white;
+  outline: none;
+}
+
+/* ================= ROOMS SECTION ================= */
+.rooms-section {
+  background: #1e293b;
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+
+/* Header */
+.rooms-header {
+  margin-bottom: 15px;
+}
+
+.rooms-header h2 {
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+/* Topbar inside rooms */
+.rooms-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+/* Add Button */
+.add-room-btn {
+  background: linear-gradient(135deg, #d4af37, #c49b2c);
+  color: #020617;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.add-room-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+/* Search */
+.rooms-search {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #020617;
+  color: #f1f5f9;
+  width: 240px;
+}
+
+.rooms-search::placeholder {
+  color: #94a3b8;
+}
+
+/* ================= TABLE ================= */
+.rooms-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rooms-table thead {
+  background: #020617;
+}
+
+.rooms-table th,
+.rooms-table td {
+  padding: 16px 14px;
+  border-bottom: 1px solid #334155;
+  vertical-align: middle;
+}
+
+/* Header text */
+.rooms-table th {
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+/* ===== PERFECT COLUMN ALIGNMENT ===== */
+
+/* First column (Room Type) */
+.rooms-table th:nth-child(1),
+.rooms-table td:nth-child(1) {
+  text-align: left;
+}
+
+/* Price */
+.rooms-table th:nth-child(2),
+.rooms-table td:nth-child(2) {
+  text-align: center;
+  width: 120px;
+}
+
+/* Photo */
+.rooms-table th:nth-child(3),
+.rooms-table td:nth-child(3) {
+  text-align: center;
+  width: 140px;
+}
+
+/* Action */
+.rooms-table th:nth-child(4),
+.rooms-table td:nth-child(4) {
+  text-align: center;
+  width: 180px;
+}
+
+/* Row hover */
+.rooms-table tbody tr {
+  transition: 0.2s;
+}
+
+.rooms-table tbody tr:hover {
+  background: #0f172a;
+}
+
+/* ================= IMAGE ================= */
+.room-img {
+  display: block;
+  margin: auto;
+  width: 75px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #334155;
+}
+
+/* ================= ACTION BUTTONS ================= */
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-edit {
+  background: #d4af37;
+  color: #020617;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-edit:hover {
+  opacity: 0.85;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-delete:hover {
+  opacity: 0.85;
+}
+
+/* ================= PAGINATION ================= */
+.rooms-pagination {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.rooms-pagination button,
+.rooms-pagination span {
+  margin: 0 4px;
+  padding: 7px 13px;
+  border-radius: 6px;
+  border: none;
+}
+
+.rooms-pagination .active {
+  background: #d4af37;
+  color: #020617;
+}

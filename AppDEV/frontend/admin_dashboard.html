@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Grand Solace Hotel</title>
+  <link rel="stylesheet" href="styles/admin_dashboard.css">
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2 class="logo">Grand Solace</h2>
+    <ul>
+      <li class="active">Dashboard</li>
+      <li>Rooms</li>
+      <li>Bookings</li>
+      <li>Guests</li>
+      <li>Settings</li>
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <h1>Dashboard</h1>
+      <input type="text" id="searchInput" placeholder="Search reservations...">
+    </header>
+
+    <!-- Summary Cards -->
+    <section class="cards">
+      <div class="card">
+        <h3>Total Bookings</h3>
+        <p>872</p>
+      </div>
+
+      <div class="card">
+        <h3>Available Rooms</h3>
+        <p>285</p>
+      </div>
+
+      <div class="card">
+        <h3>Check In</h3>
+        <p>53</p>
+      </div>
+
+      <div class="card">
+        <h3>Check Out</h3>
+        <p>78</p>
+      </div>
+    </section>
+
+    <!-- Widgets -->
+    <section class="widgets">
+
+      <!-- Available Rooms -->
+      <div class="widget">
+        <div class="circle">
+          <span>785</span>
+        </div>
+        <p>Available Room Today</p>
+      </div>
+
+      <!-- Booked Rooms -->
+      <div class="widget">
+        <h3>Booked Room Today</h3>
+
+        <div class="bar orange"></div>
+        <div class="bar blue"></div>
+        <div class="bar purple"></div>
+
+        <div class="labels">
+          <span><b>234</b> Pending</span>
+          <span><b>65</b> Done</span>
+          <span><b>763</b> Finish</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Table -->
+    <section class="table-section">
+      <h2>Recent Reservations</h2>
+
+      <table id="reservationTable">
+        <thead>
+          <tr>
+            <th>Guest</th>
+            <th>Room</th>
+            <th>Check In</th>
+            <th>Check Out</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>John Doe</td>
+            <td>Deluxe Suite</td>
+            <td>Apr 20</td>
+            <td>Apr 25</td>
+            <td class="status active">Active</td>
+          </tr>
+
+          <tr>
+            <td>Jane Smith</td>
+            <td>Standard Room</td>
+            <td>Apr 21</td>
+            <td>Apr 23</td>
+            <td class="status pending">Pending</td>
+          </tr>
+
+          <tr>
+            <td>Michael Lee</td>
+            <td>Executive Room</td>
+            <td>Apr 22</td>
+            <td>Apr 26</td>
+            <td class="status active">Active</td>
+          </tr>
+
+          <tr>
+            <td>Sarah Kim</td>
+            <td>Suite</td>
+            <td>Apr 23</td>
+            <td>Apr 27</td>
+            <td class="status pending">Pending</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+</div>
+
+<!-- Search Function -->
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function() {
+  let filter = this.value.toLowerCase();
+  let rows = document.querySelectorAll("#reservationTable tbody tr");
+
+  rows.forEach(row => {
+    let text = row.textContent.toLowerCase();
+    row.style.display = text.includes(filter) ? "" : "none";
+  });
+});
+</script>
+
+</body>
+</html>

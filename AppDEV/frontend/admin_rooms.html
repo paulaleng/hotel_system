@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Rooms</title>
+    <link rel="stylesheet" href="styles/admin_rooms.css">
+</head>
+<body>
+
+<div class="rooms-section">
+
+  <div class="rooms-header">
+    <h2>Rooms Management</h2>
+  </div>
+
+  <div class="rooms-topbar">
+    <button class="add-room-btn">+ Add Room</button>
+    <input type="text" class="rooms-search" placeholder="Search rooms...">
+  </div>
+
+  <table class="rooms-table">
+    <thead>
+      <tr>
+        <th>Room Type</th>
+        <th class="center">Price</th>
+        <th class="center">Photo</th>
+        <th class="center">Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>Executive Suite</td>
+        <td class="center">₱4000</td>
+        <td class="center">
+          <img src="images/room1.jpg" class="room-img">
+        </td>
+        <td class="center actions">
+          <button class="btn-edit">Edit</button>
+          <button class="btn-delete">Delete</button>
+        </td>
+      </tr>
+
+      <tr>
+        <td>Suite</td>
+        <td class="center">₱3800</td>
+        <td class="center">
+          <img src="images/room2.jpg" class="room-img">
+        </td>
+        <td class="center actions">
+          <button class="btn-edit">Edit</button>
+          <button class="btn-delete">Delete</button>
+        </td>
+      </tr>
+
+      <tr>
+        <td>Superior</td>
+        <td class="center">₱3800</td>
+        <td class="center">
+          <img src="images/room3.jpg" class="room-img">
+        </td>
+        <td class="center actions">
+          <button class="btn-edit">Edit</button>
+          <button class="btn-delete">Delete</button>
+        </td>
+      </tr>
+
+      <tr>
+        <td>Standard</td>
+        <td class="center">₱2000</td>
+        <td class="center">
+          <img src="images/room4.jpg" class="room-img">
+        </td>
+        <td class="center actions">
+          <button class="btn-edit">Edit</button>
+          <button class="btn-delete">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="rooms-pagination">
+    <button>Previous</button>
+    <span class="active">1</span>
+    <button>Next</button>
+  </div>
+
+</div>
+
+
+</body>
+</html>
