@@ -1,20 +1,18 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import Login from './components/Login';
+import Register from './components/Register';
 
 export default function App() {
+  const [screen, setScreen] = useState('login');
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <>
+      {screen === 'login' ? (
+        <Login switchScreen={setScreen} />
+      ) : (
+        <Register switchScreen={setScreen} />
+      )}
+    </>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
