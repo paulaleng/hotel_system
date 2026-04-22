@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Login</title>
-    <link rel="stylesheet" href="styles/admin_login.css">
+
+    {% load static %}
+
+<link rel="stylesheet" href="{% static 'styles/admin_login.css' %}">
 </head>
 <body>
 
@@ -12,19 +15,25 @@
         <h1>Admin Login</h1>
         <p>Grand Solace Hotel</p>
 
-        <form>
+        <form method="POST">
+            {% csrf_token %}
+
             <div class="input-group">
                 <label>Username</label>
-                <input type="text" placeholder="Enter username" required>
+                <input type="text" name="username" placeholder="Enter username" required>
             </div>
 
             <div class="input-group">
                 <label>Password</label>
-                <input type="password" placeholder="Enter password" required>
+                <input type="password" name="password" placeholder="Enter password" required>
             </div>
 
             <button type="submit">Login</button>
         </form>
+
+        {% if error %}
+            <p style="color:red; margin-top:10px;">{{ error }}</p>
+        {% endif %}
     </div>
 </div>
 

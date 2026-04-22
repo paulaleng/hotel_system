@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - Grand Solace Hotel</title>
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles/user_auth.css' %}">
+</head>
+<body>
+
+<div class="left-panel"></div>
+
+<div class="right-panel">
+    <div class="auth-box">
+
+        <h1>Create Account</h1>
+        <p>Start your journey with us</p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="username" required>
+            </div>
+
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password1" required>
+            </div>
+
+            <div class="input-group">
+                <label>Confirm Password</label>
+                <input type="password" name="password2" required>
+            </div>
+
+            <button type="submit" class="btn">Register</button>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        <p class="switch">
+            Already have an account?
+            <a href="{% url 'login' %}">Login</a>
+        </p>
+
+    </div>
+</div>
+
+</body>
+</html>

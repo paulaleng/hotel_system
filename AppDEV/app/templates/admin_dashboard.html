@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Dashboard - Grand Solace Hotel</title>
-  <link rel="stylesheet" href="styles/admin_dashboard.css">
+
+  {% load static %}
+
+  <link rel="stylesheet" href="{% static 'styles/admin_dashboard.css' %}">
 </head>
 <body>
 
@@ -20,6 +23,7 @@
       <li>Settings</li>
     </ul>
   </aside>
+  
 
   <!-- Main -->
   <main class="main">

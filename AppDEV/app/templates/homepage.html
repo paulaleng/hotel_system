@@ -4,101 +4,80 @@
 <meta charset="UTF-8">
 <title>Grand Solace Hotel</title>
 
-<link rel="stylesheet" href="styles/home.css">
-<link rel="stylesheet" href="components/navbar.html">
-<link rel="stylesheet" href="components/navbar.css">
+{% load static %}
+
+<!-- NAVBAR CSS FIRST -->
+<link rel="stylesheet" href="{% static 'components/navbar.css' %}">
+
+<!-- PAGE CSS -->
+<link rel="stylesheet" href="{% static 'styles/home.css' %}">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
-
 </head>
-
-<div id="navbar"></div>
-
-<script>
-fetch("components/navbar.html")
-  .then(res => res.text())
-  .then(data => {
-      document.getElementById("navbar").innerHTML = data;
-  });
-</script>
 
 <body>
 
 <!-- NAVBAR -->
-<div id="navbar"></div>
-
+{% include 'components/navbar.html' %}
 
 <!-- HERO -->
 <section class="hero">
-
     <div class="welcome-card">
         <h1>Welcome to Grand Solace Hotel</h1>
         <p>
             Welcome to Grand Solace Hotel, a calm and elegant space designed to give you comfort, relaxation, and peace. From the moment you arrive, you will be welcomed with warmth, care, and genuine thoughtfulness. Every detail of our hotel is carefully prepared to ensure you feel at home and at ease throughout your stay. We are committed to providing attentive service that makes your experience smooth, relaxing, and stress-free. Whether you are here for rest or travel, we promise a peaceful and meaningful stay filled with comfort and care.
         </p>
     </div>
-
 </section>
 
-<!-- 1: ABOUT (TEXT LEFT, IMAGE RIGHT) -->
+<!-- ABOUT -->
 <section class="section">
-
     <div class="container">
-
         <div class="text">
             <h2>About the Hotel</h2>
             <p>
-               Grand Solace Hotel is built with elegance and simplicity in mind, offering a peaceful escape for every guest. Every space is thoughtfully designed to bring comfort, relaxation, and a sense of calm from the moment you arrive. We focus on creating a warm and welcoming environment where you can truly feel at ease. With attention to detail and genuine hospitality, we aim to make your stay smooth and memorable. At Grand Solace Hotel, your comfort and satisfaction are always our priority.
+                Grand Solace Hotel is built with elegance and simplicity in mind, offering a peaceful escape for every guest. Every space is thoughtfully designed to bring comfort, relaxation, and a sense of calm from the moment you arrive. We focus on creating a warm and welcoming environment where you can truly feel at ease. With attention to detail and genuine hospitality, we aim to make your stay smooth and memorable. At Grand Solace Hotel, your comfort and satisfaction are always our priority.
+            </p>
+
             </p>
         </div>
 
         <div class="image">
-            <img src="images/hotel.png">
+            <img src="{% static 'images/hotel.png' %}" alt="Hotel">
         </div>
-
     </div>
-
 </section>
 
-<!-- 2: SERVICES (IMAGE LEFT, TEXT RIGHT) -->
+<!-- SERVICES -->
 <section class="section alt">
-
     <div class="container">
-
         <div class="image">
-            <img src="images/chair.png">
+            <img src="{% static 'images/chair.png' %}" alt="Services">
         </div>
 
         <div class="text">
             <h2>Our Services</h2>
             <p>
-               We offer 24/7 assistance, housekeeping, room service, and personalized guest support to ensure that every need is attended to with care and efficiency. Our dedicated team is always ready to assist you at any time of the day, making your stay smooth and worry-free. We take pride in maintaining clean, comfortable, and well-prepared rooms for your relaxation. Every service is delivered with thoughtfulness and attention to detail to enhance your experience. At Grand Solace Hotel, your comfort, convenience, and satisfaction are always our priority.
+                We offer 24/7 assistance, housekeeping, room service, and personalized guest support to ensure that every need is attended to with care and efficiency. Our dedicated team is always ready to assist you at any time of the day, making your stay smooth and worry-free. We take pride in maintaining clean, comfortable, and well-prepared rooms for your relaxation. Every service is delivered with thoughtfulness and attention to detail to enhance your experience. At Grand Solace Hotel, your comfort, convenience, and satisfaction are always our priority.
             </p>
         </div>
-
     </div>
-
 </section>
 
-<!-- 3: STAFF (TEXT LEFT, IMAGE RIGHT) -->
+<!-- STAFF -->
 <section class="section">
-
     <div class="container">
-
         <div class="text">
             <h2>Professional Staff</h2>
             <p>
                 Our friendly and well-trained staff is dedicated to making every guest feel warmly welcomed from the moment they arrive. We treat each guest with respect, care, and genuine hospitality to ensure a pleasant experience throughout their stay. Every member of our team is attentive and ready to assist with your needs at any time. We strive to create a comfortable and supportive environment where you feel valued and at ease. From arrival to departure, we make sure your stay is smooth, memorable, and truly cared for.
-
             </p>
         </div>
 
         <div class="image">
-            <img src="images/staff.png">
+            <img src="{% static 'images/staff.png' %}" alt="Staff">
         </div>
-
     </div>
-
 </section>
 
 </body>

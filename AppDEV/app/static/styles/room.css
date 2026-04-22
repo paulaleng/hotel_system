@@ -7,6 +7,43 @@
     font-family: "Segoe UI", sans-serif;
 }
 
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1f1f1f;
+    padding: 18px 50px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* LEFT SIDE */
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.nav-left a {
+    margin-right: 30px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+/* RIGHT SIDE */
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+.nav-right a {
+    margin-left: 25px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+}
+
 /* BODY */
 body {
     background: #f6f6f6;

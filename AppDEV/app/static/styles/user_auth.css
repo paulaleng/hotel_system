@@ -1,0 +1,141 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* MAIN LAYOUT */
+body {
+    height: 100vh;
+    display: flex;
+}
+
+/* LEFT SIDE (IMAGE) */
+.left-panel {
+    flex: 1;
+    background: url("../images/hotel.png") no-repeat center/cover;
+    position: relative;
+}
+
+/* Optional dark overlay for classy look */
+.left-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+/* RIGHT SIDE (FORM) */
+.right-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #ffffff; /* keep white */
+    padding: 40px;
+}
+
+/* FORM CONTAINER */
+.auth-box {
+    width: 100%;
+    max-width: 460px; /* increased from 380px */
+
+    background: #fff8e6;
+    padding: 50px 45px; /* more inner space */
+
+    border-radius: 14px;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+
+    border: 1px solid rgba(184, 155, 94, 0.2);
+}
+
+.auth-box h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #5c4a1f; /* darker gold tone */
+}
+
+.auth-box p {
+    margin-bottom: 20px;
+    color: #7a6a3a;
+}
+
+/* INPUTS */
+.input-group {
+    margin-bottom: 18px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #333;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.input-group input:focus {
+    border-color: #b89b5e;
+    outline: none;
+    box-shadow: 0 0 5px rgba(184, 155, 94, 0.3);
+}
+/* BUTTON */
+.btn {
+    width: 100%;
+    padding: 12px;
+    background: #b89b5e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    background: #a3844d;
+}
+
+/* ERROR */
+.error {
+    color: red;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* SWITCH LINK */
+.switch {
+    margin-top: 18px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.switch a {
+    text-decoration: none;
+    color: #1e3a8a;
+    font-weight: bold;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    body {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        height: 200px;
+    }
+
+    .right-panel {
+        height: auto;
+    }
+}

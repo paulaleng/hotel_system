@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Rooms | Grand Solace Hotel</title>
-    <link rel="stylesheet" href="styles/dashboard.css">
-    <link rel="stylesheet" href="components/navbar.css">
+
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'components/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/room.css' %}">
+    
 
 </head>
-<div id="navbar"></div>
 
-<script>
-fetch("components/navbar.html")
-  .then(res => res.text())
-  .then(data => {
-      document.getElementById("navbar").innerHTML = data;
-  });
-</script>
+<body>
+
+<!-- NAVBAR (DJANGO INCLUDE INSTEAD OF FETCH) -->
+{% include 'components/navbar.html' %}
+
 <script>
 function searchRooms() {
     let input = document.getElementById("roomSearch").value.toLowerCase();
@@ -33,8 +34,6 @@ function searchRooms() {
 }
 </script>
 
-<body>
-
 <div class="title">
     <h1>Choose your stay</h1>
     <p>Select the perfect room for your comfort</p>
@@ -49,7 +48,7 @@ function searchRooms() {
     <!-- SINGLE ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/single.png">
+            <img src="{% static 'images/single.png' %}">
         </div>
 
         <div class="room-info">
@@ -73,7 +72,7 @@ function searchRooms() {
     <!-- TWIN ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/twin.png">
+            <img src="{% static 'images/twin.png' %}">
         </div>
 
         <div class="room-info">
@@ -99,7 +98,7 @@ function searchRooms() {
     <!-- STANDARD ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/standard.png">
+            <img src="{% static 'images/standard.png' %}">
         </div>
 
         <div class="room-info">
@@ -127,7 +126,7 @@ function searchRooms() {
     <!-- FAMILY ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/family.png">
+            <img src="{% static 'images/family.png' %}">
         </div>
 
         <div class="room-info">
@@ -157,7 +156,7 @@ function searchRooms() {
     <!-- DELUXE ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/deluxe.png">
+            <img src="{% static 'images/deluxe.png' %}">
         </div>
 
         <div class="room-info">
@@ -189,7 +188,7 @@ function searchRooms() {
     <!-- SUITE ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/suite.png">
+            <img src="{% static 'images/suite.png' %}">
         </div>
 
         <div class="room-info">
@@ -223,7 +222,7 @@ function searchRooms() {
     <!-- SUPERIOR ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/superior.png">
+            <img src="{% static 'images/superior.png' %}">
         </div>
 
         <div class="room-info">
@@ -259,7 +258,7 @@ function searchRooms() {
     <!-- EXECUTIVE ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/executive.png">
+            <img src="{% static 'images/executive.png' %}">
         </div>
 
         <div class="room-info">
@@ -297,7 +296,7 @@ function searchRooms() {
     <!-- SEA VIEW ROOM -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/sea.png">
+            <img src="{% static 'images/sea.png' %}">
         </div>
 
         <div class="room-info">
@@ -336,7 +335,7 @@ function searchRooms() {
     <!-- PENTHOUSE -->
     <div class="room-card">
         <div class="room-img">
-            <img src="images/penthouse.png">
+            <img src="{% static 'images/penthouse.png' %}">
         </div>
 
         <div class="room-info">
