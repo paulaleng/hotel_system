@@ -1,0 +1,303 @@
+/* GENERAL */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f6fa;
+}
+
+/* HERO */
+.hero {
+    height: 350px;
+    background: url('../images/deluxe.png') center/cover no-repeat;
+    display: flex;
+    align-items: flex-end;
+    padding: 30px;
+    color: white;
+}
+
+.hero-content h1 {
+    font-size: 40px;
+    margin: 0;
+}
+
+.hero-content p {
+    margin-top: 5px;
+}
+
+.container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+.left {
+    flex: 2;
+}
+
+.right {
+    flex: 1;
+}
+
+/* CARD */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card h2 {
+    margin-top: 0;
+}
+
+/* GALLERY */
+.gallery {
+    display: flex;
+    gap: 10px;
+}
+
+.gallery img {
+    width: 32%;
+    border-radius: 10px;
+}
+
+/* AMENITIES */
+.amenities {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0;
+}
+
+.amenities li {
+    list-style: none;
+    background: #f1f2f6;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.right {
+    flex: 1;
+}
+
+/* CARD BASE */
+.booking {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+
+/* PRICE SECTION */
+.price-block {
+    text-align: left;
+}
+
+.price {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111;
+}
+
+.price-note {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #888;
+}
+
+/* DIVIDER */
+.divider {
+    height: 1px;
+    background: #eee;
+    margin: 15px 0;
+}
+
+/* FIELDS */
+.field {
+    margin-top: 14px;
+}
+
+.field label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* INPUT */
+.field input {
+    width: 100%;
+    padding: 10px 12px;
+
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+
+    font-size: 14px;
+}
+
+/* SUMMARY CARD */
+.summary {
+    margin-top: 16px;
+    padding: 12px;
+
+    background: #f9fafc;
+    border-radius: 10px;
+}
+
+.summary h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #333;
+}
+
+.summary p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #555;
+}
+
+.summary span {
+    color: #888;
+    font-weight: 400;
+}
+
+/* BENEFITS */
+.benefits {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #444;
+}
+
+/* NOTE */
+.note {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #777;
+    border-top: 1px dashed #eee;
+    padding-top: 10px;
+}
+
+/* BUTTON */
+button {
+    margin-top: 14px;
+    width: 100%;
+    padding: 12px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2f80ed;
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+button:hover {
+    background: #1c5ed6;
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #2f80ed;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1c5ed6;
+}
+
+/* CALENDAR */
+.calendar {
+    margin-top: 15px;
+}
+
+.calendar input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.field {
+    margin-top: 15px;
+}
+
+.field label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+/* wrapper for custom arrow */
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper select {
+    width: 100%;
+    padding: 12px 40px 12px 12px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    background: #fff;
+    font-size: 14px;
+    color: #333;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    cursor: pointer;
+
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* custom arrow */
+.select-wrapper::after {
+    content: "▾";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #777;
+    pointer-events: none;
+    font-size: 14px;
+}
+
+/* hover + focus effect */
+.select-wrapper select:hover {
+    border-color: #2f80ed;
+}
+
+.select-wrapper select:focus {
+    outline: none;
+    border-color: #2f80ed;
+    box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.15);
+}
+
+.summary {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f9fafc;
+    border-radius: 10px;
+}
+
+.summary p {
+    margin: 5px 0;
+    font-size: 13px;
+    color: #444;
+}

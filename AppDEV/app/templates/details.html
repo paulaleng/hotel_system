@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Room Details | Grand Solace Hotel</title>
+
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'styles/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'styles/details.css' %}">
+
+</head>
+
+<body>
+
+{% include 'components/navbar.html' %}
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-content">
+        <h1 id="roomName">Room</h1>
+        <p id="roomTagline">Comfort and elegance</p>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- LEFT -->
+    <div class="left">
+
+        <!-- DESCRIPTION -->
+        <div class="card">
+            <h2>Description</h2>
+
+            <p id="desc1"></p>
+            <p id="desc2"></p>
+        </div>
+
+        <!-- GALLERY -->
+        <div class="card">
+            <h2>Room Gallery</h2>
+            <div class="gallery" id="gallery"></div>
+        </div>
+
+        <!-- AMENITIES -->
+        <div class="card">
+            <h2>Amenities</h2>
+            <ul class="amenities" id="amenities"></ul>
+        </div>
+
+    </div>
+
+<div class="right">
+
+    <div class="booking" id="bookingCard">
+
+        <!-- PRICE HEADER -->
+        <div class="price-block">
+            <div class="price" id="price"></div>
+            <p class="price-note">per night • taxes included</p>
+        </div>
+
+        <!-- DIVIDER -->
+        <div class="divider"></div>
+
+        <!-- DATE -->
+        <div class="field">
+            <label>Check-in Date</label>
+            <input type="date" id="datePicker">
+        </div>
+
+        <!-- GUESTS -->
+        <div class="field">
+            <label>Guests</label>
+            <div class="select-wrapper">
+                <select id="guests">
+                    <option>1 Guest</option>
+                    <option>2 Guests</option>
+                    <option>3 Guests</option>
+                    <option>4 Guests</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- SUMMARY CARD -->
+        <div class="summary">
+            <h4>Booking Summary</h4>
+            <p><span>Room:</span> <b id="summaryRoom"></b></p>
+            <p><span>Date:</span> <b id="summaryDate">Not selected</b></p>
+            <p><span>Guests:</span> <b id="summaryGuests">1 Guest</b></p>
+        </div>
+
+        <!-- BENEFITS -->
+        <div class="benefits">
+            <p>✔ Free cancellation</p>
+            <p>✔ Instant confirmation</p>
+            <p>✔ Secure booking</p>
+        </div>
+
+        <!-- NOTE -->
+        <div class="note">
+            Check-in 2:00 PM • Check-out 12:00 PM
+        </div>
+
+        <!-- CTA -->
+        <button onclick="bookNow()">Book Now</button>
+
+    </div>
+
+</div>
+
+<script>
+
+const rooms = {
+
+    single: {
+        name: "Single Room",
+        price: "₱2,000 / night",
+        hero: "{% static 'images/single.png' %}",
+        images: [
+            "{% static 'images/single.png' %}",
+            "{% static 'images/single.png' %}",
+            "{% static 'images/single.png' %}"
+        ],
+        desc: [
+            "Perfect for solo travelers who want a simple and peaceful stay.",
+            "A budget-friendly room with essential comfort and convenience."
+        ],
+        amenities: ["Free WiFi","Air-conditioned","Basic toiletries"]
+    },
+
+    twin: {
+        name: "Twin Room",
+        price: "₱3,200 / night",
+        hero: "{% static 'images/twin.png' %}",
+        images: [
+            "{% static 'images/twin.png' %}",
+            "{% static 'images/twin.png' %}",
+            "{% static 'images/twin.png' %}"
+        ],
+        desc: [
+            "Comfortable room with two beds for friends or colleagues.",
+            "Ideal for shared stays with complete amenities."
+        ],
+        amenities: ["Free WiFi","Air-conditioned","Basic toiletries","Extra towels", "Complimentary bottled water"]
+    },
+
+    standard: {
+        name: "Standard Room",
+        price: "₱3,900 / night",
+        hero: "{% static 'images/standard.png' %}",
+        images: [
+            "{% static 'images/standard1.png' %}",
+            "{% static 'images/standard2.png' %}",
+            "{% static 'images/standard3.png' %}"
+        ],
+        desc: [
+            "Cozy and comfortable room perfect for relaxation.",
+            "Includes essential features for a satisfying stay."
+        ],
+        amenities: ["Free WiFi","Air-conditioned","Basic toiletries", "Smart TV","Daily housekeeping", "Complimentary bottled water", "Extra towels"]
+    },
+
+    family: {
+        name: "Family Room",
+        price: "₱5,000 / night",
+        hero: "{% static 'images/family.png' %}",
+        images: [
+            "{% static 'images/family.png' %}",
+            "{% static 'images/family.png' %}",
+            "{% static 'images/family.png' %}"
+        ],
+        desc: [
+            "Spacious room designed for families.",
+            "Extra space and comfort for group stays."
+        ],
+        amenities: ["Free WiFi","Extra beds","Kids-friendly","Smart TV", "Daily housekeeping", "Extra Towels", "Complimentary bottled water", "Basic toiletries", "Air-conditioned"]
+    },
+
+    deluxe: {
+        name: "Deluxe Room",
+        price: "₱5,500 / night",
+        hero: "{% static 'images/deluxe.png' %}",
+        images: [
+            "{% static 'images/deluxe1.png' %}",
+            "{% static 'images/deluxe2.png' %}",
+            "{% static 'images/deluxe3.png' %}"
+        ],
+        desc: [
+            "Elegant room with modern design and enhanced comfort for a premium stay.",
+            "Enjoy a relaxing atmosphere with complete amenities perfect for leisure or business travelers."
+        ],
+        amenities: [
+            "Free WiFi",
+            "Air-conditioned",
+            "Basic toiletries",
+            "Complimentary bottled water",
+            "Extra towels",
+            "Daily housekeeping",
+            "Smart TV",
+            "Extra beds available",
+            "Kids-friendly space",
+            "City view",
+            "Mini bar"
+        ]
+    },
+
+    suite: {
+        name: "Suite Room",
+        price: "₱7,000 / night",
+        hero: "{% static 'images/suite.png' %}",
+        images: [
+            "{% static 'images/suite1.png' %}",
+            "{% static 'images/suite2.png' %}",
+            "{% static 'images/suite3.png' %}"
+        ],
+        desc: [
+            "Luxury suite with separate living area and premium hotel experience.",
+            "Perfect for guests who want space, elegance, and a complete high-end stay."
+        ],
+        amenities: [
+            "Free WiFi",
+            "Air-conditioned",
+            "Basic toiletries",
+            "Complimentary bottled water",
+            "Extra towels",
+            "Daily housekeeping",
+            "Smart TV",
+            "Extra beds available",
+            "Kids-friendly space",
+            "City view",
+            "Mini bar",
+            "Living room area",
+            "Coffee & tea set"
+        ]
+    },
+
+    superior: {
+        name: "Superior Room",
+        price: "₱8,500 / night",
+        hero: "{% static 'images/superior.png' %}",
+        images: [
+            "{% static 'images/superior.png' %}",
+            "{% static 'images/superior.png' %}",
+            "{% static 'images/superior.png' %}"
+        ],
+        desc: [
+            "Upgraded comfort with stylish interiors and a relaxing ambiance.",
+            "Ideal for guests looking for extra perks and premium relaxation."
+        ],
+        amenities: [
+            "Free WiFi",
+            "Air-conditioned",
+            "Basic toiletries",
+            "Complimentary bottled water",
+            "Extra towels",
+            "Daily housekeeping",
+            "Smart TV",
+            "Extra beds available",
+            "Kids-friendly space",
+            "City view",
+            "Mini bar",
+            "Living room area",
+            "Coffee & tea set",
+            "Complimentary breakfast",
+            "Pool access"
+        ]
+    },
+
+    executive: {
+        name: "Executive Room",
+        price: "₱10,000 / night",
+        hero: "{% static 'images/executive.png' %}",
+        images: [
+            "{% static 'images/executive.png' %}",
+            "{% static 'images/executive.png' %}",
+            "{% static 'images/executive.png' %}"
+        ],
+        desc: [
+            "Premium business-class room designed for productivity and comfort.",
+            "Includes work-friendly features and luxury services for professionals."
+        ],
+        amenities: [
+            "Free WiFi (high-speed)",
+            "Air-conditioned",
+            "Basic toiletries",
+            "Complimentary bottled water",
+            "Extra towels",
+            "Daily housekeeping",
+            "Smart TV",
+            "Extra beds available",
+            "Kids-friendly space",
+            "Living room area",
+            "Coffee & tea set",
+            "Complimentary breakfast",
+            "Pool access",
+            "Work desk setup",
+            "Meeting room access"
+        ]
+    },
+
+    seaview: {
+        name: "Sea View Suite",
+        price: "₱12,500 / night",
+        hero: "{% static 'images/sea.png' %}",
+        images: [
+            "{% static 'images/sea.png' %}",
+            "{% static 'images/sea.png' %}",
+            "{% static 'images/sea.png' %}"
+        ],
+        desc: [
+            "Relaxing suite with breathtaking ocean views and luxury comfort.",
+            "Enjoy peaceful surroundings with high-end features and scenic beauty."
+        ],
+        amenities: [
+            "Free WiFi (high-speed)",
+            "Air-conditioned",
+            "Premium toiletries",
+            "Complimentary bottled water",
+            "Extra towels",
+            "Daily housekeeping",
+            "Smart TV",
+            "Extra beds available",
+            "Kids-friendly space",
+            "Private balcony",
+            "Sunset deck access",
+            "Room service 24/7",
+            "Mini bar",
+            "Private jacuzzi",
+            "Work desk setup"
+        ]
+    },
+
+    penthouse: {
+        name: "Penthouse Room",
+        price: "₱20,000 / night",
+        hero: "{% static 'images/penthouse.png' %}",
+        images: [
+            "{% static 'images/penthouse.png' %}",
+            "{% static 'images/penthouse.png' %}",
+            "{% static 'images/penthouse.png' %}"
+        ],
+        desc: [
+            "The ultimate luxury stay with VIP service and panoramic views.",
+            "Experience top-tier comfort, exclusivity, and premium amenities."
+        ],
+        amenities: [
+            "Free WiFi (ultra high-speed)",
+            "Air-conditioned",
+            "Luxury toiletries",
+            "Complimentary bottled water",
+            "Extra towels",
+            "Personal concierge",
+            "VIP dining experience",
+            "Smart TV",
+            "Private jacuzzi",
+            "Helicopter transfer assistance",
+            "Daily housekeeping",
+            "Sunset deck access",
+            "Room service 24/7",
+            "Premium toiletries",
+            "Coffee & tea set",
+            "Living room area",
+            "Work desk setup",
+            "City view",
+            "Complimentary breakfast",
+            "Private balcony"
+        ]
+    }
+
+};
+
+// GET ROOM FROM URL
+const params = new URLSearchParams(window.location.search);
+const roomKey = params.get("room");
+
+// FALLBACK
+if (!rooms[roomKey]) {
+    window.location.href = "/rooms/";
+}
+
+// LOAD DATA
+const room = rooms[roomKey];
+
+// HERO
+document.querySelector(".hero").style.backgroundImage = `url('${room.hero}')`;
+
+// TITLE + TAGLINE
+document.getElementById("roomName").innerText = room.name;
+document.getElementById("roomTagline").innerText = "Luxury comfort awaits";
+
+// DESCRIPTION
+document.getElementById("desc1").innerText = room.desc[0];
+document.getElementById("desc2").innerText = room.desc[1];
+
+// PRICE
+document.getElementById("price").innerText = room.price;
+
+// GALLERY
+document.getElementById("gallery").innerHTML =
+    room.images.map(img => `<img src="${img}">`).join("");
+
+// AMENITIES
+document.getElementById("amenities").innerHTML =
+    room.amenities.map(a => `<li>${a}</li>`).join("");
+
+
+// DATE LOGIC
+const unavailableDates = [
+    "2026-04-25",
+    "2026-04-26",
+    "2026-05-01"
+];
+
+const dateInput = document.getElementById("datePicker");
+
+dateInput.addEventListener("input", function () {
+    if (unavailableDates.includes(this.value)) {
+        alert("This date is unavailable!");
+        this.value = "";
+    }
+});
+
+document.getElementById("summaryRoom").innerText = room.name;
+
+// date update
+dateInput.addEventListener("input", function () {
+    if (unavailableDates.includes(this.value)) {
+        alert("This date is unavailable!");
+        this.value = "";
+    } else {
+        document.getElementById("summaryDate").innerText = this.value;
+    }
+});
+
+const booking = document.getElementById("bookingCard");
+const rightColumn = document.querySelector(".right");
+const stopPoint = document.querySelector(".container");
+
+const offsetTop = booking.offsetTop;
+
+window.addEventListener("scroll", () => {
+    const scrollY = window.scrollY;
+
+    const containerBottom = stopPoint.offsetTop + stopPoint.offsetHeight;
+    const bookingHeight = booking.offsetHeight;
+
+    // start floating
+    if (scrollY > offsetTop && scrollY + bookingHeight < containerBottom) {
+        booking.classList.add("fixed");
+    } else {
+        booking.classList.remove("fixed");
+    }
+});
+
+// guests update
+const guestSelect = document.getElementById("guests");
+guestSelect.addEventListener("change", function () {
+    document.getElementById("summaryGuests").innerText = this.value;
+});
+
+// BOOK
+function bookNow() {
+    let date = dateInput.value;
+
+    if (!date) {
+        alert("Please select a valid date.");
+        return;
+    }
+
+    alert(room.name + " booked for " + date);
+}
+</script>
+
+</body>
+</html>

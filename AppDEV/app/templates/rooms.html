@@ -36,7 +36,7 @@ function searchRooms() {
 
 <script>
 function goToDetails(roomType) {
-    window.location.href = `details.html?room=${roomType}`;
+    window.location.href = "{% url 'details' %}?room=" + roomType;
 }
 </script>
 

@@ -96,3 +96,6 @@ def register(request):
 
 def rooms(request):
     return render(request, 'rooms.html')
+
+def details(request):
+    return render(request, 'details.html')
