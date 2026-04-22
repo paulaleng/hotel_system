@@ -34,6 +34,12 @@ function searchRooms() {
 }
 </script>
 
+<script>
+function goToDetails(roomType) {
+    window.location.href = `details.html?room=${roomType}`;
+}
+</script>
+
 <div class="title">
     <h1>Choose your stay</h1>
     <p>Select the perfect room for your comfort</p>
@@ -64,7 +70,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱2,000 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('single')">Select</button>
         </div>
     </div>
 
@@ -90,7 +96,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱3,200 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('twin')">Select</button>
         </div>
     </div>
 
@@ -118,7 +124,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱3,900 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('standard')">Select</button>
         </div>
     </div>
 
@@ -148,7 +154,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱5,000 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('family')">Select</button>
         </div>
     </div>
 
@@ -180,7 +186,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱5,500 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('deluxe')">Select</button>
         </div>
     </div>
 
@@ -214,7 +220,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱7,000 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('suite')">Select</button>
         </div>
     </div>
 
@@ -250,7 +256,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱8,500 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('superior')">Select</button>
         </div>
     </div>
 
@@ -288,7 +294,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱10,000 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('executive')">Select</button>
         </div>
     </div>
 
@@ -327,7 +333,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱12,500 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('seaview')">Select</button>
         </div>
     </div>
 
@@ -368,7 +374,7 @@ function searchRooms() {
 
         <div class="room-price">
             <h3>₱20,000 / night</h3>
-            <button>Select</button>
+            <button onclick="goToDetails('penthouse')">Select</button>
         </div>
     </div>
 
