@@ -52,7 +52,11 @@
 
 <div class="right">
 
+    <div class="right">
+
     <div class="booking" id="bookingCard">
+
+        <form id="bookingForm" onsubmit="bookNow(event)">
 
         <!-- PRICE HEADER -->
         <div class="price-block">
@@ -66,28 +70,38 @@
         <!-- DATE -->
         <div class="field">
             <label>Check-in Date</label>
-            <input type="date" id="datePicker">
+            <input type="date" id="datePicker" required>
+        </div>
+
+        <!-- FULL NAME -->
+        <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="fullName" placeholder="Enter your full name" required>
+        </div>
+
+        <!-- CONTACT NUMBER -->
+        <div class="field">
+            <label>Contact Number</label>
+            <input type="tel" id="contactNumber" placeholder="09XXXXXXXXX" required>
+        </div>
+
+        <!-- EMAIL -->
+        <div class="field">
+            <label>Email Address</label>
+            <input type="email" id="emailAddress" placeholder="you@example.com" required>
         </div>
 
         <!-- GUESTS -->
         <div class="field">
             <label>Guests</label>
             <div class="select-wrapper">
-                <select id="guests">
-                    <option>1 Guest</option>
-                    <option>2 Guests</option>
-                    <option>3 Guests</option>
-                    <option>4 Guests</option>
+                <select id="guests" required>
+                    <option value="1 Guest">1 Guest</option>
+                    <option value="2 Guests">2 Guests</option>
+                    <option value="3 Guests">3 Guests</option>
+                    <option value="4 Guests">4 Guests</option>
                 </select>
             </div>
-        </div>
-
-        <!-- SUMMARY CARD -->
-        <div class="summary">
-            <h4>Booking Summary</h4>
-            <p><span>Room:</span> <b id="summaryRoom"></b></p>
-            <p><span>Date:</span> <b id="summaryDate">Not selected</b></p>
-            <p><span>Guests:</span> <b id="summaryGuests">1 Guest</b></p>
         </div>
 
         <!-- BENEFITS -->
@@ -103,7 +117,9 @@
         </div>
 
         <!-- CTA -->
-        <button onclick="bookNow()">Book Now</button>
+        <button type="submit">Book Now</button>
+
+        </form>
 
     </div>
 
@@ -460,15 +476,31 @@ guestSelect.addEventListener("change", function () {
 });
 
 // BOOK
-function bookNow() {
-    let date = dateInput.value;
+function bookNow(event) {
+    event.preventDefault();
 
-    if (!date) {
-        alert("Please select a valid date.");
+    const form = document.getElementById("bookingForm");
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
         return;
     }
 
-    alert(room.name + " booked for " + date);
+    let name = document.getElementById("fullName").value.trim();
+    let contact = document.getElementById("contactNumber").value.trim();
+    let email = document.getElementById("emailAddress").value.trim();
+    let date = document.getElementById("datePicker").value;
+    let guests = document.getElementById("guests").value;
+
+    alert(
+        "Booking Confirmed!\n\n" +
+        "Name: " + name + "\n" +
+        "Contact: " + contact + "\n" +
+        "Email: " + email + "\n" +
+        "Room: " + room.name + "\n" +
+        "Date: " + date + "\n" +
+        "Guests: " + guests
+    );
 }
 </script>
 

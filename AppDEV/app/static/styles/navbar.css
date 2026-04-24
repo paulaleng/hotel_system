@@ -1,36 +1,13 @@
 .navbar {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    background: #1f1f1f;
     padding: 18px 50px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: #1f1f1f;
 }
 
-/* LEFT SIDE */
-.nav-left {
-    display: flex;
-    align-items: center;
-}
-
-.nav-left a {
-    margin-right: 30px;
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 15px;
-}
-
-/* RIGHT SIDE */
-.nav-right {
-    display: flex;
-    align-items: center;
-}
-
+.nav-left a,
 .nav-right a {
-    margin-left: 25px;
     color: white;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 15px;
+    margin-right: 20px;
 }
