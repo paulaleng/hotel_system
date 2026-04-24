@@ -102,3 +102,7 @@ def details(request):
 
 def profile(request):
     return render(request, "profile.html")
+
+def schedule(request):
+    return render(request, "schedule.html")
+

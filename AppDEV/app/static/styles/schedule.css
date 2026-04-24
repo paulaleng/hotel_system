@@ -1,0 +1,141 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+}
+
+/* WRAPPER */
+.schedule-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.schedule-container {
+    width: 100%;
+    max-width: 1200px; /* makes it wide but controlled */
+}
+
+/* HEADER */
+.schedule-header {
+    margin-bottom: 30px;
+}
+
+.schedule-header h2 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.schedule-header p {
+    color: #777;
+    margin-top: 5px;
+}
+
+/* SECTION */
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+.section h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* CARD */
+.card {
+    background: #fff;
+    padding: 15px 18px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* LEFT SIDE */
+.card {
+    background: #fff;
+    padding: 18px 22px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* LEFT */
+.left {
+    flex: 1;
+}
+
+.room {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* MIDDLE (DATE + GUESTS) */
+.middle {
+    flex: 2;
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+}
+
+.meta {
+    font-size: 13px;
+    color: #666;
+}
+
+/* RIGHT STATUS */
+.right-status {
+    flex: 1;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+/* STATUS COLORS */
+.upcoming {
+    background: #e8f0ff;
+    color: #1d4ed8;
+}
+
+.past {
+    background: #eeeeee;
+    color: #555;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 8px 14px;
+    border: none;
+    background: #eee;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.tab:hover {
+    background: #ddd;
+}
+
+.tab.active {
+    background: #222;
+    color: #fff;
+}

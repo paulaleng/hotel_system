@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Schedule | Grand Solace Hotel</title>
+
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'styles/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'styles/schedule.css' %}">
+</head>
+
+<body>
+
+{% include 'components/navbar.html' %}
+
+<div class="schedule-wrapper">
+
+    <div class="schedule-container">
+
+        <!-- HEADER -->
+        <div class="schedule-header">
+            <h2>My Schedule</h2>
+            <p>Manage your bookings and stay history</p>
+        </div>
+
+        <!-- FILTER NAV -->
+<div class="tabs">
+    <button class="tab active" onclick="filterTab('all', event)">All</button>
+    <button class="tab" onclick="filterTab('reservation', event)">Reservation</button>
+    <button class="tab" onclick="filterTab('history', event)">History</button>
+</div>
+
+        <!-- UPCOMING BOOKINGS -->
+<div class="section reservation-section active">
+
+    <h3>Upcoming Reservations</h3>
+
+    <div class="card">
+        <div class="left">
+            <div class="room">Deluxe Room</div>
+        </div>
+
+        <div class="middle">
+            <div class="meta">April 30, 2026</div>
+            <div class="meta">2 Guests</div>
+        </div>
+
+        <div class="right-status upcoming">Confirmed</div>
+    </div>
+
+    <div class="card">
+        <div class="left">
+            <div class="room">Sea View Suite</div>
+        </div>
+
+        <div class="middle">
+            <div class="meta">May 5, 2026</div>
+            <div class="meta">3 Guests</div>
+        </div>
+
+        <div class="right-status upcoming">Confirmed</div>
+    </div>
+
+</div>  <!-- ✅ THIS WAS MISSING -->
+
+<!-- PAST BOOKINGS -->
+<div class="section history-section">
+
+    <h3>Booking History</h3>
+
+    <div class="card">
+        <div class="left">
+            <div class="room">Standard Room</div>
+        </div>
+
+        <div class="middle">
+            <div class="meta">March 10, 2026</div>
+            <div class="meta">1 Guest</div>
+        </div>
+
+        <div class="right-status past">Completed</div>
+    </div>
+
+<div class="card">
+
+    <div class="left">
+        <div class="room">Twin Room</div>
+    </div>
+
+    <div class="middle">
+        <div class="meta">February 18, 2026</div>
+        <div class="meta">2 Guest</div>
+    </div>
+
+    <div class="right-status past">Completed</div>
+
+</div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function filterTab(type, event) {
+    const reservation = document.querySelector(".reservation-section");
+    const history = document.querySelector(".history-section");
+
+    const tabs = document.querySelectorAll(".tab");
+
+    // reset tabs
+    tabs.forEach(tab => tab.classList.remove("active"));
+    event.target.classList.add("active");
+
+    // reset sections
+    reservation.classList.remove("active");
+    history.classList.remove("active");
+
+    if (type === "all") {
+        reservation.classList.add("active");
+        history.classList.add("active");
+    }
+
+    if (type === "reservation") {
+        reservation.classList.add("active");
+    }
+
+    if (type === "history") {
+        history.classList.add("active");
+    }
+}
+</script>
+
+</body>
+</html>
