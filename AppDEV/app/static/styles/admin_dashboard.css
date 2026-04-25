@@ -1,4 +1,3 @@
-/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -62,18 +61,15 @@ body {
 }
 
 .topbar input {
-  width: 300px;          /* controls length */
-  max-width: 40%;        /* prevents it from getting too long on large screens */
+  width: 300px;
+  max-width: 40%;
   padding: 10px 14px;
   border-radius: 8px;
   border: none;
   background: #1e293b;
   color: white;
   outline: none;
-  transition: 0.3s;
 }
-
-
 
 /* Cards */
 .cards {
@@ -136,36 +132,39 @@ body {
   color: #94a3b8;
 }
 
-/* Bars */
-.bar {
+/* =========================
+   FIXED BAR SYSTEM (NO CONFLICT)
+   ========================= */
+
+.bar-container {
+  width: 100%;
   height: 8px;
+  background: #334155; /* empty bar background */
   border-radius: 6px;
   margin: 10px 0;
-  background: #334155;
-  position: relative;
+  overflow: hidden;
 }
 
-.bar::after {
-  content: "";
-  position: absolute;
+.bar {
   height: 100%;
+  width: 0%;
   border-radius: 6px;
+  transition: width 0.3s ease;
 }
 
-.bar.orange::after {
-  width: 70%;
+/* ONLY SHOW COLOR WHEN FILLED */
+.bar.orange {
   background: #f59e0b;
 }
 
-.bar.blue::after {
-  width: 40%;
+.bar.blue {
   background: #38bdf8;
 }
 
-.bar.purple::after {
-  width: 80%;
+.bar.purple {
   background: #a855f7;
 }
+
 
 /* Labels */
 .labels {
@@ -173,6 +172,7 @@ body {
   justify-content: space-between;
   font-size: 12px;
   margin-top: 10px;
+  color: #cbd5f5;
 }
 
 /* Table */

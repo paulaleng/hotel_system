@@ -2,18 +2,29 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name='landing'),  # landing page
+    path('', views.home, name='landing'),
 
-    path('homepage/', views.homepage, name='homepage'),  # user home
+    path('homepage/', views.homepage, name='homepage'),
 
     path('admin-login/', views.admin_login, name='admin_login'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
     path('logout/', views.admin_logout, name='logout'),
 
     path('login/', views.user_login, name='login'),
     path('register/', views.register, name='register'),
+
     path('rooms/', views.rooms, name='rooms'),
     path('details/', views.details, name='details'),
     path("profile/", views.profile, name="profile"),
-    path('schedule/', views.schedule, name='schedule')
+    path('schedule/', views.schedule, name='schedule'),
+
+    # =========================
+    # ADMIN ROOMS ROUTES
+    # =========================
+    path('dashboard/rooms/', views.admin_rooms, name='admin_rooms'),
+    path('dashboard/rooms/add/', views.add_room, name='add_room'),
+    path('dashboard/rooms/edit/<int:room_id>/', views.edit_room, name='edit_room'),
+    path('dashboard/rooms/delete/<int:room_id>/', views.delete_room, name='delete_room'),
+    path('dashboard/rooms/toggle/<int:room_id>/', views.toggle_room_status, name='toggle_room_status'),
 ]

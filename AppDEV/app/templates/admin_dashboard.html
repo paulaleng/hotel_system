@@ -17,13 +17,15 @@
     <h2 class="logo">Grand Solace</h2>
     <ul>
       <li class="active">Dashboard</li>
+        <a href="{% url 'admin_rooms' %}"
+          class="{% if request.resolver_match.url_name == 'admin_rooms' %}active{% endif %}">
       <li>Rooms</li>
+        </a>
       <li>Bookings</li>
       <li>Guests</li>
       <li>Settings</li>
     </ul>
   </aside>
-  
 
   <!-- Main -->
   <main class="main">
@@ -34,54 +36,34 @@
       <input type="text" id="searchInput" placeholder="Search reservations...">
     </header>
 
-    <!-- Summary Cards -->
+    <!-- Summary Cards (BACKEND ADDED) -->
     <section class="cards">
       <div class="card">
         <h3>Total Bookings</h3>
-        <p>872</p>
+        <p>{{ total_bookings|default:0 }}</p>
       </div>
 
       <div class="card">
         <h3>Available Rooms</h3>
-        <p>285</p>
+        <p>{{ available_rooms|default:0 }}</p>
       </div>
 
       <div class="card">
         <h3>Check In</h3>
-        <p>53</p>
+        <p>{{ check_in_count|default:0 }}</p>
       </div>
 
       <div class="card">
         <h3>Check Out</h3>
-        <p>78</p>
+        <p>{{ check_out_count|default:0 }}</p>
       </div>
     </section>
 
-    <!-- Widgets -->
+    <!-- Widgets (UNCHANGED STRUCTURE, BUT TWO BLOCKS REMOVED) -->
     <section class="widgets">
 
-      <!-- Available Rooms -->
-      <div class="widget">
-        <div class="circle">
-          <span>785</span>
-        </div>
-        <p>Available Room Today</p>
-      </div>
-
-      <!-- Booked Rooms -->
-      <div class="widget">
-        <h3>Booked Room Today</h3>
-
-        <div class="bar orange"></div>
-        <div class="bar blue"></div>
-        <div class="bar purple"></div>
-
-        <div class="labels">
-          <span><b>234</b> Pending</span>
-          <span><b>65</b> Done</span>
-          <span><b>763</b> Finish</span>
-        </div>
-      </div>
+      <!-- ❌ REMOVED: Available Room Today widget -->
+      <!-- ❌ REMOVED: Booked Room Today widget -->
 
     </section>
 
@@ -101,37 +83,21 @@
         </thead>
 
         <tbody>
+          {% for booking in recent_reservations %}
           <tr>
-            <td>John Doe</td>
-            <td>Deluxe Suite</td>
-            <td>Apr 20</td>
-            <td>Apr 25</td>
-            <td class="status active">Active</td>
+            <td>{{ booking.guest_name }}</td>
+            <td>{{ booking.room.room_type }}</td>
+            <td>{{ booking.check_in }}</td>
+            <td>{{ booking.check_out }}</td>
+            <td class="status {{ booking.status|lower }}">
+              {{ booking.status }}
+            </td>
           </tr>
-
+          {% empty %}
           <tr>
-            <td>Jane Smith</td>
-            <td>Standard Room</td>
-            <td>Apr 21</td>
-            <td>Apr 23</td>
-            <td class="status pending">Pending</td>
+            <td colspan="5">No reservations found</td>
           </tr>
-
-          <tr>
-            <td>Michael Lee</td>
-            <td>Executive Room</td>
-            <td>Apr 22</td>
-            <td>Apr 26</td>
-            <td class="status active">Active</td>
-          </tr>
-
-          <tr>
-            <td>Sarah Kim</td>
-            <td>Suite</td>
-            <td>Apr 23</td>
-            <td>Apr 27</td>
-            <td class="status pending">Pending</td>
-          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </section>
@@ -147,8 +113,7 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
   let rows = document.querySelectorAll("#reservationTable tbody tr");
 
   rows.forEach(row => {
-    let text = row.textContent.toLowerCase();
-    row.style.display = text.includes(filter) ? "" : "none";
+    row.style.display = row.textContent.toLowerCase().includes(filter) ? "" : "none";
   });
 });
 </script>

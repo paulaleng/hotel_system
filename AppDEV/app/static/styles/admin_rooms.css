@@ -6,6 +6,18 @@
   font-family: 'Segoe UI', sans-serif;
 }
 
+
+.sidebar ul a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.sidebar ul a.active li {
+  background: #d4af37;
+  color: #020617;
+}
+
 body {
   background: #0f172a;
   color: #f1f5f9;
