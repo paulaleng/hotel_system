@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Rooms</title>
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'styles/admin_rooms.css' %}">
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <h2 class="logo">Grand Solace</h2>
+
+    <ul>
+      <a href="{% url 'admin_dashboard' %}"
+         class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+        <li>Dashboard</li>
+      </a>
+
+      <a href="{% url 'admin_rooms' %}"
+         class="{% if request.resolver_match.url_name == 'admin_rooms' %}active{% endif %}">
+        <li>Rooms</li>
+      </a>
+
+      <li>Bookings</li>
+      <li>Guests</li>
+      <li>Settings</li>
+    </ul>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+
+    <div class="rooms-section">
+
+      <!-- Header -->
+      <div class="rooms-header">
+        <h2>Rooms Management</h2>
+      </div>
+
+      <!-- Topbar -->
+      <div class="rooms-topbar">
+
+        <a href="{% url 'add_room' %}" class="add-room-btn">
+          + Add Room
+        </a>
+
+        <input
+          type="text"
+          class="rooms-search"
+          placeholder="Search rooms..."
+          id="searchInput">
+
+      </div>
+
+      <!-- ================= TABLE ================= -->
+      <table class="rooms-table">
+
+        <thead>
+          <tr>
+            <th>Room Type</th>
+            <th>Price</th>
+            <th>Photo</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for room in rooms %}
+          <tr>
+
+            <td class="room-type">
+              {{ room.room_type }}
+            </td>
+
+            <td class="center">
+              ₱{{ room.price }}
+            </td>
+
+            <td class="center">
+              <img src="{{ room.image.url }}" class="room-img">
+            </td>
+
+            <td class="center">
+              {% if room.is_available %}
+                <span class="status available">Available</span>
+              {% else %}
+                <span class="status unavailable">Unavailable</span>
+              {% endif %}
+            </td>
+
+            <td class="actions">
+
+              <!-- EDIT BUTTON -->
+              <button
+                type="button"
+                class="btn-edit"
+                data-id="{{ room.id }}"
+                data-type="{{ room.room_type }}"
+                data-price="{{ room.price }}"
+                data-status="{{ room.is_available }}"
+                data-image="{{ room.image.url }}"
+                onclick="openEditModal(this)">
+                Edit
+              </button>
+
+              <!-- DELETE -->
+              <a href="{% url 'delete_room' room.id %}"
+                 class="btn-delete"
+                 onclick="return confirm('Delete this room?')">
+                 Delete
+              </a>
+
+              <!-- TOGGLE -->
+              <a href="{% url 'toggle_room_status' room.id %}"
+                 class="btn-toggle">
+                {% if room.is_available %}
+                  Mark as Unavailable
+                {% else %}
+                  Mark as Available
+                {% endif %}
+              </a>
+
+            </td>
+
+          </tr>
+
+          {% empty %}
+          <tr>
+            <td colspan="5" class="no-data">
+              No rooms found
+            </td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- ================= EDIT MODAL ================= -->
+<div class="modal-overlay" id="editModal">
+
+  <div class="edit-modal">
+
+    <div class="modal-header">
+      <h2>Edit Room</h2>
+      <span class="close-btn" onclick="closeEditModal()">&times;</span>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="editForm">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label>Room Type</label>
+        <input type="text" name="room_type" id="editRoomType" required>
+      </div>
+
+      <div class="form-group">
+        <label>Price</label>
+        <input type="number" name="price" id="editPrice" required>
+      </div>
+
+      <div class="form-group">
+        <label>Current Photo</label>
+        <img id="editPreview" class="preview-img">
+      </div>
+
+      <div class="form-group">
+        <label>Upload New Photo</label>
+        <input type="file" name="image">
+      </div>
+
+      <div class="form-group">
+        <label>Status</label>
+
+        <select name="is_available" id="editStatus">
+          <option value="True">Available</option>
+          <option value="False">Unavailable</option>
+        </select>
+      </div>
+
+      <div class="modal-buttons">
+
+        <button type="submit" class="save-btn">
+          Save Changes
+        </button>
+
+        <button
+          type="button"
+          class="cancel-btn"
+          onclick="closeEditModal()">
+          Cancel
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+<!-- ================= SEARCH ================= -->
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function () {
+
+  let filter = this.value.toLowerCase();
+  let rows = document.querySelectorAll(".rooms-table tbody tr");
+
+  rows.forEach(row => {
+    row.style.display =
+      row.textContent.toLowerCase().includes(filter)
+      ? ""
+      : "none";
+  });
+
+});
+</script>
+
+<!-- ================= EDIT MODAL SCRIPT ================= -->
+<script>
+function openEditModal(button){
+
+  const id = button.dataset.id;
+  const type = button.dataset.type;
+  const price = button.dataset.price;
+  const status = button.dataset.status;
+  const image = button.dataset.image;
+
+  document.getElementById("editModal").style.display = "flex";
+
+  document.getElementById("editRoomType").value = type;
+  document.getElementById("editPrice").value = price;
+  document.getElementById("editStatus").value =
+    status === "True" ? "True" : "False";
+
+  document.getElementById("editPreview").src = image;
+
+  document.getElementById("editForm").action =
+    "/edit-room/" + id + "/";
+}
+
+function closeEditModal(){
+  document.getElementById("editModal").style.display = "none";
+}
+
+window.onclick = function(e){
+  const modal = document.getElementById("editModal");
+
+  if(e.target === modal){
+    closeEditModal();
+  }
+}
+</script>
+
+</body>
+</html>

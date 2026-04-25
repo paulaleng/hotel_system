@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils.timezone import now
+from .models import Booking
 
 from .models import GuestBooking, Room
 
@@ -54,8 +55,8 @@ def admin_dashboard(request):
     total_rooms = Room.objects.count()
 
     booked_rooms_today = Room.objects.filter(
-        guestbooking__check_in__lte=today,
-        guestbooking__check_out__gte=today
+        bookings__check_in__lte=today,
+        bookings__check_out__gte=today
     ).distinct().count()
 
     available_rooms = max(total_rooms - booked_rooms_today, 0)
@@ -152,8 +153,10 @@ def rooms(request):
 def details(request):
     return render(request, 'details.html')
 
+
 def profile(request):
     return render(request, "profile.html")
+
 
 def schedule(request):
     return render(request, "schedule.html")
@@ -165,7 +168,7 @@ def schedule(request):
 @login_required
 def admin_rooms(request):
     rooms = Room.objects.all()
-    return render(request, 'admin_rooms', {'rooms': rooms})
+    return render(request, 'admin_rooms.html', {'rooms': rooms})
 
 
 # =========================
@@ -175,14 +178,15 @@ def admin_rooms(request):
 def add_room(request):
     if request.method == "POST":
         Room.objects.create(
+            room_number=request.POST.get('room_number'),
             room_type=request.POST.get('room_type'),
             price=request.POST.get('price'),
             image=request.FILES.get('image'),
             is_available=True
         )
-        return redirect('admin_rooms')
+        return redirect('admin_rooms')  # IMPORTANT
 
-    return render(request, 'add_room')
+    return render(request, 'add_room.html')
 
 
 # =========================
@@ -193,6 +197,7 @@ def edit_room(request, room_id):
     room = get_object_or_404(Room, id=room_id)
 
     if request.method == "POST":
+        room.room_number = request.POST.get('room_number')
         room.room_type = request.POST.get('room_type')
         room.price = request.POST.get('price')
 
@@ -200,9 +205,9 @@ def edit_room(request, room_id):
             room.image = request.FILES.get('image')
 
         room.save()
-        return redirect('admin_rooms')
+        return redirect('admin_rooms')  # FIXED
 
-    return render(request, 'edit_room', {'room': room})
+    return render(request, 'edit_room.html', {'room': room})
 
 
 # =========================
@@ -212,7 +217,7 @@ def edit_room(request, room_id):
 def delete_room(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     room.delete()
-    return redirect('admin_rooms')
+    return redirect('admin_rooms')  # FIXED
 
 
 # =========================
@@ -223,4 +228,29 @@ def toggle_room_status(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     room.is_available = not room.is_available
     room.save()
-    return redirect('admin_rooms')
+    return redirect('admin_rooms')  # FIXED
+
+# =========================
+# Book Now
+# =========================
+def room_details(request):
+    if request.method == "POST":
+        room = request.POST.get("room")
+        name = request.POST.get("fullName")
+        contact = request.POST.get("contactNumber")
+        email = request.POST.get("emailAddress")
+        date = request.POST.get("datePicker")
+        guests = request.POST.get("guests")
+
+        Booking.objects.create(
+            room=room,
+            full_name=name,
+            contact_number=contact,
+            email=email,
+            check_in_date=date,
+            guests=guests
+        )
+
+        return render(request, "success.html")
+
+    return render(request, "details.html")

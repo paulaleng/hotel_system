@@ -18,6 +18,8 @@ urlpatterns = [
     path('details/', views.details, name='details'),
     path("profile/", views.profile, name="profile"),
     path('schedule/', views.schedule, name='schedule'),
+    path('room-details/', views.room_details, name='room_details'),
+
 
     # =========================
     # ADMIN ROOMS ROUTES
@@ -26,5 +28,6 @@ urlpatterns = [
     path('dashboard/rooms/add/', views.add_room, name='add_room'),
     path('dashboard/rooms/edit/<int:room_id>/', views.edit_room, name='edit_room'),
     path('dashboard/rooms/delete/<int:room_id>/', views.delete_room, name='delete_room'),
-    path('dashboard/rooms/toggle/<int:room_id>/', views.toggle_room_status, name='toggle_room_status'),
+    path('dashboard/rooms/toggle/<int:room_id>/', views.toggle_room_status, name='toggle_room_status')
+    
 ]

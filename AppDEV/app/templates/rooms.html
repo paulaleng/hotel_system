@@ -1,384 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Rooms | Grand Solace Hotel</title>
+<meta charset="UTF-8">
+<title>Room Details | Grand Solace Hotel</title>
 
-    {% load static %}
+{% load static %}
 
-    <link rel="stylesheet" href="{% static 'components/navbar.css' %}">
-    <link rel="stylesheet" href="{% static 'styles/room.css' %}">
-    
+<link rel="stylesheet" href="{% static 'styles/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'styles/details.css' %}">
 
 </head>
 
 <body>
 
-<!-- NAVBAR (DJANGO INCLUDE INSTEAD OF FETCH) -->
 {% include 'components/navbar.html' %}
 
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-content">
+        <h1 id="roomName">Room</h1>
+        <p id="roomTagline">Comfort and elegance</p>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="left">
+
+        <div class="card">
+            <h2>Description</h2>
+            <p id="desc1"></p>
+            <p id="desc2"></p>
+        </div>
+
+        <div class="card">
+            <h2>Room Gallery</h2>
+            <div class="gallery" id="gallery"></div>
+        </div>
+
+        <div class="card">
+            <h2>Amenities</h2>
+            <ul class="amenities" id="amenities"></ul>
+        </div>
+
+    </div>
+
+<div class="right">
+
+    <div class="booking" id="bookingCard">
+
+        <!-- ✅ FORM NOW CONNECTED TO DJANGO -->
+        <form method="POST">
+        {% csrf_token %}
+
+        <!-- hidden room -->
+        <input type="hidden" name="room" id="roomInput">
+
+        <div class="price-block">
+            <div class="price" id="price"></div>
+            <p class="price-note">per night • taxes included</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+            <label>Check-in Date</label>
+            <input type="date" name="datePicker" id="datePicker" required>
+        </div>
+
+        <div class="field">
+            <label>Full Name</label>
+            <input type="text" name="fullName" id="fullName" required>
+        </div>
+
+        <div class="field">
+            <label>Contact Number</label>
+            <input type="tel" name="contactNumber" id="contactNumber" required>
+        </div>
+
+        <div class="field">
+            <label>Email Address</label>
+            <input type="email" name="emailAddress" id="emailAddress" required>
+        </div>
+
+        <div class="field">
+            <label>Guests</label>
+            <select name="guests" id="guests">
+                <option value="1 Guest">1 Guest</option>
+                <option value="2 Guests">2 Guests</option>
+                <option value="3 Guests">3 Guests</option>
+                <option value="4 Guests">4 Guests</option>
+            </select>
+        </div>
+
+        <button type="submit">Book Now</button>
+
+        </form>
+
+    </div>
+
+</div>
+
 <script>
-function searchRooms() {
-    let input = document.getElementById("roomSearch").value.toLowerCase();
-    let rooms = document.querySelectorAll(".room-card");
 
-    rooms.forEach(room => {
-        let text = room.innerText.toLowerCase();
+const rooms = {
+    single: { name: "Single Room", price: "₱2,000 / night", hero: "{% static 'images/single.png' %}" },
+    twin: { name: "Twin Room", price: "₱3,200 / night", hero: "{% static 'images/twin.png' %}" },
+    standard: { name: "Standard Room", price: "₱3,900 / night", hero: "{% static 'images/standard.png' %}" },
+    family: { name: "Family Room", price: "₱5,000 / night", hero: "{% static 'images/family.png' %}" },
+    deluxe: { name: "Deluxe Room", price: "₱5,500 / night", hero: "{% static 'images/deluxe.png' %}" },
+    suite: { name: "Suite Room", price: "₱7,000 / night", hero: "{% static 'images/suite.png' %}" },
+    superior: { name: "Superior Room", price: "₱8,500 / night", hero: "{% static 'images/superior.png' %}" },
+    executive: { name: "Executive Room", price: "₱10,000 / night", hero: "{% static 'images/executive.png' %}" },
+    seaview: { name: "Sea View Suite", price: "₱12,500 / night", hero: "{% static 'images/sea.png' %}" },
+    penthouse: { name: "Penthouse Room", price: "₱20,000 / night", hero: "{% static 'images/penthouse.png' %}" }
+};
 
-        if (text.includes(input)) {
-            room.style.display = "flex";
-        } else {
-            room.style.display = "none";
-        }
-    });
+const params = new URLSearchParams(window.location.search);
+const roomKey = params.get("room");
+
+if (!rooms[roomKey]) {
+    window.location.href = "/rooms/";
 }
+
+const room = rooms[roomKey];
+
+// set hidden input value
+document.getElementById("roomInput").value = roomKey;
+
+// display
+document.querySelector(".hero").style.backgroundImage = `url('${room.hero}')`;
+document.getElementById("roomName").innerText = room.name;
+document.getElementById("price").innerText = room.price;
+
 </script>
-
-<script>
-function goToDetails(roomType) {
-    window.location.href = "{% url 'details' %}?room=" + roomType;
-}
-</script>
-
-<div class="title">
-    <h1>Choose your stay</h1>
-    <p>Select the perfect room for your comfort</p>
-</div>
-
-<div class="search-box">
-    <input type="text" id="roomSearch" placeholder="Search room type..." onkeyup="searchRooms()">
-</div>
-
-<div class="room-list">
-
-    <!-- SINGLE ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/single.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Single Room</h2>
-            <p>Perfect for solo travelers who want a simple, peaceful, and budget-friendly stay.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱2,000 / night</h3>
-            <button onclick="goToDetails('single')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- TWIN ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/twin.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Twin Room</h2>
-            <p>Comfortable room with two single beds, ideal for friends or colleagues.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱3,200 / night</h3>
-            <button onclick="goToDetails('twin')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- STANDARD ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/standard.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Standard Room</h2>
-            <p>Cozy and comfortable room with essential amenities for a relaxing stay.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱3,900 / night</h3>
-            <button onclick="goToDetails('standard')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- FAMILY ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/family.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Family Room</h2>
-            <p>Spacious room designed for families with extra comfort and space.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱5,000 / night</h3>
-            <button onclick="goToDetails('family')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- DELUXE ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/deluxe.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Deluxe Room</h2>
-            <p>Elegant room with modern design and enhanced comfort for a premium stay.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>City view</li>
-                <li>Mini bar</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱5,500 / night</h3>
-            <button onclick="goToDetails('deluxe')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- SUITE ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/suite.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Suite Room</h2>
-            <p>Luxury suite with separate living area and premium hotel experience.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>City view</li>
-                <li>Mini bar</li>
-                <li>Living room area</li>
-                <li>Coffee & tea set</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱7,000 / night</h3>
-            <button onclick="goToDetails('suite')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- SUPERIOR ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/superior.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Superior Room</h2>
-            <p>Upgraded comfort with stylish interiors and relaxing atmosphere.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>City view</li>
-                <li>Mini bar</li>
-                <li>Living room area</li>
-                <li>Coffee & tea set</li>
-                <li>Complimentary breakfast</li>
-                <li>Pool access</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱8,500 / night</h3>
-            <button onclick="goToDetails('superior')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- EXECUTIVE ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/executive.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Executive Room</h2>
-            <p>Premium business-class room designed for productivity and comfort.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi (high-speed)</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>Living room area</li>
-                <li>Coffee & tea set</li>
-                <li>Complimentary breakfast</li>
-                <li>Pool access</li>
-                <li>Work desk setup</li>
-                <li>Meeting room access</li>
-                <li>Mini bar</li>
-                <li>Premium toiletries</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱10,000 / night</h3>
-            <button onclick="goToDetails('executive')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- SEA VIEW ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/sea.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Sea View Suite</h2>
-            <p>Relaxing suite with breathtaking ocean view and luxury comfort experience.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi (high-speed)</li>
-                <li>Air-conditioned</li>
-                <li>Premium toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>Private balcony</li>
-                <li>Sunset deck access</li>
-                <li>Room service 24/7</li>
-                <li>Mini bar</li>
-                <li>Private jacuzzi</li>
-                <li>Work desk setup</li>
-                <li>Complimentary breakfast</li>
-                <li>Coffee & tea set</li>
-                <li>Personal concierge</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱12,500 / night</h3>
-            <button onclick="goToDetails('seaview')">Select</button>
-        </div>
-    </div>
-
-
-    <!-- PENTHOUSE -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/penthouse.png' %}">
-        </div>
-
-        <div class="room-info">
-            <h2>Penthouse Room</h2>
-            <p>The ultimate luxury stay with VIP service, panoramic views, and top-tier comfort.</p>
-
-            <ul class="freebies">
-                <li>Free WiFi (ultra high-speed)</li>
-                <li>Air-conditioned</li>
-                <li>Luxury toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Personal concierge</li>
-                <li>VIP dining experience</li>
-                <li>Smart TV</li>
-                <li>Private jacuzzi</li>
-                <li>Helicopter transfer assistance</li>
-                <li>Daily housekeeping</li>
-                <li>Sunset deck access</li>
-                <li>Room service 24/7</li>
-                <li>Premium toiletries</li>
-                <li>Coffee & tea set</li>
-                <li>Living room area</li>
-                <li>Work desk setup</li>
-                <li>City view</li>
-                <li>Complimentary breakfast</li>
-                <li>Private balcony</li>
-            </ul>
-        </div>
-
-        <div class="room-price">
-            <h3>₱20,000 / night</h3>
-            <button onclick="goToDetails('penthouse')">Select</button>
-        </div>
-    </div>
-
-</div>
 
 </body>
 </html>

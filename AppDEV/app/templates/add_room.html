@@ -1,0 +1,52 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Room</title>
+    <link rel="stylesheet" href="{% static 'styles/add_room.css' %}">
+</head>
+<body>
+
+<!-- 🔙 BACK BUTTON (TOP LEFT) -->
+<a href="{% url 'admin_rooms' %}" class="back-btn">← Back</a>
+
+<div class="page">
+
+    <div class="card">
+
+        <h2>Add New Room</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="input-group">
+                <label>Room Number</label>
+                <input type="text" name="room_number" required>
+            </div>
+
+            <div class="input-group">
+                <label>Room Type</label>
+                <input type="text" name="room_type" required>
+            </div>
+
+            <div class="input-group">
+                <label>Price</label>
+                <input type="number" name="price" step="0.01" required>
+            </div>
+
+            <div class="input-group">
+                <label>Room Image</label>
+                <input type="file" name="image">
+            </div>
+
+            <button type="submit" class="btn">Add Room</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

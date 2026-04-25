@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit Room - Admin</title>
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'styles/edit_room.css' %}">
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2 class="logo">Grand Solace</h2>
+
+    <ul>
+      <a href="{% url 'admin_dashboard' %}">
+        <li>Dashboard</li>
+      </a>
+
+      <a href="{% url 'admin_rooms' %}" class="active">
+        <li>Rooms</li>
+      </a>
+
+      <li>Bookings</li>
+      <li>Guests</li>
+      <li>Settings</li>
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Header -->
+    <header class="topbar">
+      <h1>Edit Room</h1>
+      <a href="{% url 'admin_rooms' %}" class="back-btn">← Back</a>
+    </header>
+
+    <!-- Form Card -->
+    <section class="form-wrapper">
+
+      <div class="form-card">
+        <h2>Update Room Details</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- Room Type -->
+          <div class="form-group">
+            <label>Room Type</label>
+            <input type="text"
+                   name="room_type"
+                   value="{{ room.room_type }}"
+                   required>
+          </div>
+
+          <!-- Price -->
+          <div class="form-group">
+            <label>Price</label>
+            <input type="number"
+                   name="price"
+                   value="{{ room.price }}"
+                   required>
+          </div>
+
+          <!-- Current Image -->
+          <div class="form-group">
+            <label>Current Photo</label>
+            <img src="{{ room.image.url }}" class="preview-img">
+          </div>
+
+          <!-- New Image -->
+          <div class="form-group">
+            <label>Upload New Photo</label>
+            <input type="file" name="image">
+          </div>
+
+          <!-- Status -->
+          <div class="form-group">
+            <label>Status</label>
+
+            <select name="is_available">
+              <option value="True"
+                {% if room.is_available %}selected{% endif %}>
+                Available
+              </option>
+
+              <option value="False"
+                {% if not room.is_available %}selected{% endif %}>
+                Unavailable
+              </option>
+            </select>
+          </div>
+
+          <!-- Buttons -->
+          <div class="form-buttons">
+            <button type="submit" class="save-btn">
+              Save Changes
+            </button>
+
+            <a href="{% url 'admin_rooms' %}" class="cancel-btn">
+              Cancel
+            </a>
+          </div>
+
+        </form>
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+</body>
+</html>
