@@ -5,266 +5,479 @@
 <title>Admin - Rooms</title>
 
 {% load static %}
+
 <link rel="stylesheet" href="{% static 'styles/admin_rooms.css' %}">
+<link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
 </head>
 
 <body>
 
+ <!-- EDIT MODAL -->
+<div id="editModal" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close" onclick="closeModal()">&times;</span>
+
+        <h2>Edit Room</h2>
+
+        <form id="editForm">
+
+            <!-- IMAGE -->
+            <div class="field">
+                <label>Room Image</label>
+
+                <div class="image-box" id="imageBox">
+                    <span id="imageName">No image</span>
+                    <button type="button" class="remove-img" onclick="removeImage()">×</button>
+                </div>
+
+                <button type="button" class="add-img" onclick="addImage()">
+                    + Add Image
+                </button>
+            </div>
+
+            <div class="field">
+                <label>Room Name</label>
+                <input type="text" id="editName">
+            </div>
+
+            <div class="field">
+                <label>Price per Night</label>
+                <input type="number" id="editPrice">
+            </div>
+
+            <div class="field">
+                <label>Max Guests</label>
+                <input type="number" id="editGuests">
+            </div>
+
+            <div class="field">
+                <label>Amenities</label>
+                <input type="text" id="editAmenities">
+            </div>
+
+            <div class="field">
+                <label>Room Details</label>
+                <textarea id="editDetails"></textarea>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="save">Save Changes</button>
+                <button type="button" class="reset" onclick="closeModal()">Cancel</button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
 <div class="container">
 
-  <!-- ================= SIDEBAR ================= -->
-  <aside class="sidebar">
-    <h2 class="logo">Grand Solace</h2>
+{% include "components/sidebar.html" %}
 
-    <ul>
-      <a href="{% url 'admin_dashboard' %}"
-         class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
-        <li>Dashboard</li>
-      </a>
+    <!-- MAIN CONTENT -->
+    <main class="main">
 
-      <a href="{% url 'admin_rooms' %}"
-         class="{% if request.resolver_match.url_name == 'admin_rooms' %}active{% endif %}">
-        <li>Rooms</li>
-      </a>
+        <!-- FORM -->
+        <div class="form-container">
+            <h2>Add Room</h2>
 
-      <li>Bookings</li>
-      <li>Guests</li>
-      <li>Settings</li>
-    </ul>
-  </aside>
+            <form>
 
-  <!-- ================= MAIN ================= -->
-  <main class="main">
+                <div class="grid-2">
 
-    <div class="rooms-section">
-
-      <!-- Header -->
-      <div class="rooms-header">
-        <h2>Rooms Management</h2>
-      </div>
-
-      <!-- Topbar -->
-      <div class="rooms-topbar">
-
-        <a href="{% url 'add_room' %}" class="add-room-btn">
-          + Add Room
-        </a>
-
-        <input
-          type="text"
-          class="rooms-search"
-          placeholder="Search rooms..."
-          id="searchInput">
-
-      </div>
-
-      <!-- ================= TABLE ================= -->
-      <table class="rooms-table">
-
-        <thead>
-          <tr>
-            <th>Room Type</th>
-            <th>Price</th>
-            <th>Photo</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          {% for room in rooms %}
-          <tr>
-
-            <td class="room-type">
-              {{ room.room_type }}
-            </td>
-
-            <td class="center">
-              ₱{{ room.price }}
-            </td>
-
-            <td class="center">
-              <img src="{{ room.image.url }}" class="room-img">
-            </td>
-
-            <td class="center">
-              {% if room.is_available %}
-                <span class="status available">Available</span>
-              {% else %}
-                <span class="status unavailable">Unavailable</span>
-              {% endif %}
-            </td>
-
-            <td class="actions">
-
-              <!-- EDIT BUTTON -->
-              <button
-                type="button"
-                class="btn-edit"
-                data-id="{{ room.id }}"
-                data-type="{{ room.room_type }}"
-                data-price="{{ room.price }}"
-                data-status="{{ room.is_available }}"
-                data-image="{{ room.image.url }}"
-                onclick="openEditModal(this)">
-                Edit
-              </button>
-
-              <!-- DELETE -->
-              <a href="{% url 'delete_room' room.id %}"
-                 class="btn-delete"
-                 onclick="return confirm('Delete this room?')">
-                 Delete
-              </a>
-
-              <!-- TOGGLE -->
-              <a href="{% url 'toggle_room_status' room.id %}"
-                 class="btn-toggle">
-                {% if room.is_available %}
-                  Mark as Unavailable
-                {% else %}
-                  Mark as Available
-                {% endif %}
-              </a>
-
-            </td>
-
-          </tr>
-
-          {% empty %}
-          <tr>
-            <td colspan="5" class="no-data">
-              No rooms found
-            </td>
-          </tr>
-          {% endfor %}
-
-        </tbody>
-
-      </table>
-
+    <div class="field">
+        <label>Room Name</label>
+        <input type="text" placeholder="e.g. Deluxe Suite">
     </div>
 
-  </main>
+    <div class="field">
+        <label>Price per Night (₱)</label>
+        <input type="number" placeholder="e.g. 5500">
+    </div>
+
+    <div class="field">
+        <label>Max Guests</label>
+        <input type="number" placeholder="e.g. 2">
+    </div>
+
+    <!-- CHANGED: Room Type → Amenities -->
+    <div class="field">
+        <label>Amenities</label>
+        <input type="text" placeholder="WiFi, TV, AC, Mini Bar">
+    </div>
 
 </div>
 
-<!-- ================= EDIT MODAL ================= -->
-<div class="modal-overlay" id="editModal">
+<div class="field">
+    <label>Room Details</label>
+    <textarea placeholder="Describe the room..."></textarea>
+</div>
 
-  <div class="edit-modal">
+                <div class="grid-3">
 
-    <div class="modal-header">
-      <h2>Edit Room</h2>
-      <span class="close-btn" onclick="closeEditModal()">&times;</span>
+                    <div class="field">
+                        <label>Image</label>
+                        <input type="file">
+                    </div>
+
+                    <div class="field">
+                        <label>Gallery 1</label>
+                        <input type="file">
+                    </div>
+
+                    <div class="field">
+                        <label>Gallery 2</label>
+                        <input type="file">
+                    </div>
+
+                    <div class="field">
+                        <label>Gallery 3</label>
+                        <input type="file">
+                    </div>
+
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="save">Save Room</button>
+                    <button type="reset" class="reset">Clear</button>
+                </div>
+
+            </form>
+        </div>
+
+
+        <!-- ROOM LIST -->
+<div class="list-container">
+
+    <h2>All Rooms</h2>
+
+    <!-- Single -->
+    <div class="room-card" data-room="single">
+        <div class="room-left">
+            <img src="{% static 'images/single.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Single Room</h3>
+            <p>₱2,000 / night</p>
+            <small>Perfect for solo travelers</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" id="editForm">
-      {% csrf_token %}
+    <!-- Twin -->
+    <div class="room-card" data-room="twin">
+        <div class="room-left">
+            <img src="{% static 'images/twin.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Twin Room</h3>
+            <p>₱3,200 / night</p>
+            <small>Ideal for friends or colleagues</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-      <div class="form-group">
-        <label>Room Type</label>
-        <input type="text" name="room_type" id="editRoomType" required>
-      </div>
+    <!-- Standard -->
+    <div class="room-card" data-room="standard">
+        <div class="room-left">
+            <img src="{% static 'images/standard.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Standard Room</h3>
+            <p>₱3,900 / night</p>
+            <small>Balanced comfort and affordability</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-      <div class="form-group">
-        <label>Price</label>
-        <input type="number" name="price" id="editPrice" required>
-      </div>
+    <!-- Family -->
+    <div class="room-card" data-room="family">
+        <div class="room-left">
+            <img src="{% static 'images/family.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Family Room</h3>
+            <p>₱5,000 / night</p>
+            <small>Perfect for families</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-      <div class="form-group">
-        <label>Current Photo</label>
-        <img id="editPreview" class="preview-img">
-      </div>
+    <!-- Deluxe -->
+    <div class="room-card" data-room="deluxe">
+        <div class="room-left">
+            <img src="{% static 'images/deluxe.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Deluxe Room</h3>
+            <p>₱5,500 / night</p>
+            <small>Premium comfort experience</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-      <div class="form-group">
-        <label>Upload New Photo</label>
-        <input type="file" name="image">
-      </div>
+    <!-- Suite -->
+    <div class="room-card" data-room="suite">
+        <div class="room-left">
+            <img src="{% static 'images/suite.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Suite Room</h3>
+            <p>₱7,000 / night</p>
+            <small>Luxury suite experience</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-      <div class="form-group">
-        <label>Status</label>
+    <!-- Superior -->
+    <div class="room-card" data-room="superior">
+        <div class="room-left">
+            <img src="{% static 'images/superior.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Superior Room</h3>
+            <p>₱8,500 / night</p>
+            <small>Spacious and elegant</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-        <select name="is_available" id="editStatus">
-          <option value="True">Available</option>
-          <option value="False">Unavailable</option>
-        </select>
-      </div>
+    <!-- Executive -->
+    <div class="room-card" data-room="executive">
+        <div class="room-left">
+            <img src="{% static 'images/executive.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Executive Room</h3>
+            <p>₱10,000 / night</p>
+            <small>Business-class luxury</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-      <div class="modal-buttons">
+    <!-- Sea View -->
+    <div class="room-card" data-room="seaview">
+        <div class="room-left">
+            <img src="{% static 'images/sea.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Sea View Suite</h3>
+            <p>₱12,500 / night</p>
+            <small>Ocean view experience</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
-        <button type="submit" class="save-btn">
-          Save Changes
-        </button>
-
-        <button
-          type="button"
-          class="cancel-btn"
-          onclick="closeEditModal()">
-          Cancel
-        </button>
-
-      </div>
-
-    </form>
-
-  </div>
+    <!-- Penthouse -->
+    <div class="room-card" data-room="penthouse">
+        <div class="room-left">
+            <img src="{% static 'images/penthouse.png' %}">
+        </div>
+        <div class="room-middle">
+            <h3>Penthouse Room</h3>
+            <p>₱20,000 / night</p>
+            <small>Ultimate luxury stay</small>
+        </div>
+        <div class="room-right">
+            <button type="button" class="edit" onclick="editRoom(this)">Edit</button>
+            <button type="button" class="delete" onclick="deleteRoom(this)">Delete</button>
+        </div>
+    </div>
 
 </div>
 
-<!-- ================= SEARCH ================= -->
+    </main>
+
+</div>
+
 <script>
-document.getElementById("searchInput").addEventListener("keyup", function () {
+const rooms = {
+    single: {
+        name: "Single Room",
+        price: "2000",
+        guests: "1",
+        description: "Perfect for solo travelers",
+        amenities: "Free WiFi, Air-conditioned, Basic toiletries",
+        image: "single.png"
+    },
+    twin: {
+        name: "Twin Room",
+        price: "3200",
+        guests: "2",
+        description: "Ideal for friends or colleagues",
+        amenities: "Free WiFi, Air-conditioned, Extra towels",
+        image: "twin.png"
+    },
+    standard: {
+        name: "Standard Room",
+        price: "3900",
+        guests: "2",
+        description: "Balanced comfort and affordability",
+        amenities: "WiFi, TV, AC, Daily housekeeping",
+        image: "standard.png"
+    },
+    family: {
+        name: "Family Room",
+        price: "5000",
+        guests: "4",
+        description: "Perfect for families",
+        amenities: "Extra beds, Kids-friendly, WiFi",
+        image: "family.png"
+    },
+    deluxe: {
+        name: "Deluxe Room",
+        price: "5500",
+        guests: "2",
+        description: "Premium comfort experience",
+        amenities: "Mini bar, Smart TV, WiFi",
+        image: "deluxe.png"
+    },
+    suite: {
+        name: "Suite Room",
+        price: "7000",
+        guests: "3",
+        description: "Luxury suite experience",
+        amenities: "Living room, Coffee set, WiFi",
+        image: "suite.png"
+    },
+    superior: {
+        name: "Superior Room",
+        price: "8500",
+        guests: "3",
+        description: "Spacious and elegant",
+        amenities: "Breakfast, Pool access, WiFi",
+        image: "superior.png"
+    },
+    executive: {
+        name: "Executive Room",
+        price: "10000",
+        guests: "2",
+        description: "Business-class luxury",
+        amenities: "Work desk, Meeting access, WiFi",
+        image: "executive.png"
+    },
+    seaview: {
+        name: "Sea View Suite",
+        price: "12500",
+        guests: "2",
+        description: "Ocean view experience",
+        amenities: "Balcony, Jacuzzi, Room service",
+        image: "sea.png"
+    },
+    penthouse: {
+        name: "Penthouse Room",
+        price: "20000",
+        guests: "2",
+        description: "Ultimate luxury stay",
+        amenities: "Private pool, VIP service, City view",
+        image: "penthouse.png"
+    }
+};
 
-  let filter = this.value.toLowerCase();
-  let rows = document.querySelectorAll(".rooms-table tbody tr");
+let currentRoomKey = null;
 
-  rows.forEach(row => {
-    row.style.display =
-      row.textContent.toLowerCase().includes(filter)
-      ? ""
-      : "none";
-  });
+/* OPEN MODAL */
+function editRoom(btn) {
+    const card = btn.closest(".room-card");
+    const key = card.getAttribute("data-room");
 
+    const room = rooms[key];
+    if (!room) return;
+
+    currentRoomKey = key;
+
+    document.getElementById("editName").value = room.name;
+    document.getElementById("editPrice").value = room.price;
+    document.getElementById("editGuests").value = room.guests;
+    document.getElementById("editAmenities").value = room.amenities;
+    document.getElementById("editDetails").value = room.description;
+
+    renderImage(room.image);
+
+    document.getElementById("editModal").style.display = "block";
+}
+
+/* IMAGE UI */
+function renderImage(imageName) {
+    const container = document.getElementById("imageBox");
+
+    if (!imageName) {
+        container.innerHTML = `<button type="button" onclick="addImage()">+ Add Image</button>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="img-row">
+            <span>${imageName}</span>
+            <button type="button" onclick="removeImage()">✖</button>
+        </div>
+    `;
+}
+
+function removeImage() {
+    if (!currentRoomKey) return;
+
+    rooms[currentRoomKey].image = "";
+    renderImage("");
+}
+
+function addImage() {
+    if (!currentRoomKey) return;
+
+    rooms[currentRoomKey].image = "new-image.png";
+    renderImage("new-image.png");
+}
+
+/* CLOSE MODAL */
+function closeModal() {
+    document.getElementById("editModal").style.display = "none";
+}
+
+/* SAVE */
+document.getElementById("editForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    if (!currentRoomKey) return;
+
+    rooms[currentRoomKey].name = document.getElementById("editName").value;
+    rooms[currentRoomKey].price = document.getElementById("editPrice").value;
+    rooms[currentRoomKey].guests = document.getElementById("editGuests").value;
+    rooms[currentRoomKey].amenities = document.getElementById("editAmenities").value;
+    rooms[currentRoomKey].description = document.getElementById("editDetails").value;
+
+    closeModal();
+    alert("Room updated successfully!");
 });
 </script>
-
-<!-- ================= EDIT MODAL SCRIPT ================= -->
-<script>
-function openEditModal(button){
-
-  const id = button.dataset.id;
-  const type = button.dataset.type;
-  const price = button.dataset.price;
-  const status = button.dataset.status;
-  const image = button.dataset.image;
-
-  document.getElementById("editModal").style.display = "flex";
-
-  document.getElementById("editRoomType").value = type;
-  document.getElementById("editPrice").value = price;
-  document.getElementById("editStatus").value =
-    status === "True" ? "True" : "False";
-
-  document.getElementById("editPreview").src = image;
-
-  document.getElementById("editForm").action =
-    "/edit-room/" + id + "/";
-}
-
-function closeEditModal(){
-  document.getElementById("editModal").style.display = "none";
-}
-
-window.onclick = function(e){
-  const modal = document.getElementById("editModal");
-
-  if(e.target === modal){
-    closeEditModal();
-  }
-}
-</script>
-
 </body>
 </html>

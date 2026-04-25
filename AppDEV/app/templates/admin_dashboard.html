@@ -7,25 +7,14 @@
   {% load static %}
 
   <link rel="stylesheet" href="{% static 'styles/admin_dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
+  
 </head>
 <body>
 
 <div class="container">
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <h2 class="logo">Grand Solace</h2>
-    <ul>
-      <li class="active">Dashboard</li>
-        <a href="{% url 'admin_rooms' %}"
-          class="{% if request.resolver_match.url_name == 'admin_rooms' %}active{% endif %}">
-      <li>Rooms</li>
-        </a>
-      <li>Bookings</li>
-      <li>Guests</li>
-      <li>Settings</li>
-    </ul>
-  </aside>
+{% include "components/sidebar.html" %}
 
   <!-- Main -->
   <main class="main">

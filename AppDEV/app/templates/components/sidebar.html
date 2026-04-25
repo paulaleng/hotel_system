@@ -1,0 +1,30 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
+
+<aside class="sidebar">
+
+  <h2 class="logo">Grand Solace</h2>
+
+  <!-- TOP MENU -->
+  <ul class="menu">
+
+    <li class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+      <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+    </li>
+
+    <li class="{% if request.resolver_match.url_name == 'admin_rooms' %}active{% endif %}">
+      <a href="{% url 'admin_rooms' %}">Rooms</a>
+    </li>
+
+    <li><a href="#">Bookings</a></li>
+    <li><a href="#">Guests</a></li>
+
+  </ul>
+
+  <!-- BOTTOM LOGOUT -->
+  <div class="logout">
+    <a href="{% url 'landing' %}">Logout</a>
+  </div>
+
+</aside>

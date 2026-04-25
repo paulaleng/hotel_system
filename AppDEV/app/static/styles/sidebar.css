@@ -1,0 +1,77 @@
+/* SIDEBAR BASE */
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: #020617;
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* LOGO */
+.logo {
+  color: #d4af37;
+  margin-bottom: 30px;
+}
+
+/* MENU LIST */
+.sidebar ul {
+  list-style: none;
+  flex: 1;
+}
+
+/* IMPORTANT: make FULL clickable area */
+.sidebar ul li {
+  margin: 10px 0;
+}
+
+/* LINK RESET (THIS FIXES BLUE + UNDERLINE ISSUE) */
+.sidebar ul li a {
+  display: block;              /* full clickable box */
+  padding: 12px;
+  border-radius: 8px;
+
+  color: #cbd5f5;
+  text-decoration: none;       /* removes underline */
+  transition: 0.3s;
+}
+
+/* FORCE OVERRIDE BROWSER STYLES */
+.sidebar ul li a:link,
+.sidebar ul li a:visited {
+  color: #cbd5f5;
+  text-decoration: none;
+}
+
+/* HOVER EFFECT */
+.sidebar ul li a:hover {
+  background: #d4af37;
+  color: #020617;
+}
+
+/* ACTIVE STATE (Django) */
+.sidebar ul li.active a {
+  background: #d4af37;
+  color: #020617;
+}
+
+/* LOGOUT */
+.logout {
+  margin-top: auto;
+}
+
+.logout a {
+  display: block;
+  padding: 12px;
+  border-radius: 8px;
+
+  color: #cbd5f5;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.logout a:hover {
+  background: #d4af37;
+  color: #020617;
+}
