@@ -170,6 +170,9 @@ def admin_rooms(request):
     rooms = Room.objects.all()
     return render(request, 'admin_rooms.html', {'rooms': rooms})
 
+def admin_guests(request):
+    return render(request, "admin_guests.html")
+
 
 # =========================
 # ADD ROOM
