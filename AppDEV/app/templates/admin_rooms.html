@@ -150,9 +150,10 @@
 
 
         <!-- ROOM LIST -->
-<div class="list-container">
-
+<div class="room-header">
     <h2>All Rooms</h2>
+    <input type="text" id="roomSearch" placeholder="Search rooms...">
+</div>
 
     <!-- Single -->
     <div class="room-card" data-room="single">
@@ -462,6 +463,16 @@ function addImage() {
 function closeModal() {
     document.getElementById("editModal").style.display = "none";
 }
+
+document.getElementById("roomSearch").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let cards = document.querySelectorAll(".room-card");
+
+    cards.forEach(card => {
+        let text = card.textContent.toLowerCase();
+        card.style.display = text.includes(filter) ? "flex" : "none";
+    });
+});
 
 /* SAVE */
 document.getElementById("editForm").addEventListener("submit", function(e) {

@@ -29,6 +29,7 @@ urlpatterns = [
     path('dashboard/rooms/edit/<int:room_id>/', views.edit_room, name='edit_room'),
     path('dashboard/rooms/delete/<int:room_id>/', views.delete_room, name='delete_room'),
     path('dashboard/rooms/toggle/<int:room_id>/', views.toggle_room_status, name='toggle_room_status'),
-    path('dashboard/guests/', views.admin_guests, name='admin_guests')
-    
+    path('dashboard/guests/', views.admin_guests, name='admin_guests'),
+    path('dashboard/bookings/', views.admin_bookings, name='admin_bookings')
 ]
+    

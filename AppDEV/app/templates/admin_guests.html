@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Guests</title>
+
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'styles/admin_guests.css' %}">
+</head>
+
+<body>
+
+<div class="container">
+
+  {% include "components/sidebar.html" %}
+
+  <main class="main">
+
+    <header class="topbar">
+      <h1></h1>
+
+      <input type="text" id="searchInput" placeholder="Search guests...">
+    </header>
+
+    <section class="table-section">
+
+      <h2>Guest Accounts</h2>
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Date Created</th>
+            <th>Total Bookings</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>john_doe</td>
+            <td>john@example.com</td>
+            <td>Jan 10, 2026</td>
+            <td>3</td>
+            <td>
+              <button class="btn delete">Delete</button>
+            </td>
+          </tr>
+
+          <tr>
+            <td>mary_smith</td>
+            <td>mary@example.com</td>
+            <td>Feb 02, 2026</td>
+            <td>1</td>
+            <td>
+              <button class="btn delete">Delete</button>
+            </td>
+          </tr>
+
+          <tr>
+            <td>alex_lee</td>
+            <td>alex@example.com</td>
+            <td>Mar 15, 2026</td>
+            <td>5</td>
+            <td>
+              <button class="btn delete">Delete</button>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </section>
+
+  </main>
+
+</div>
+
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function () {
+  let filter = this.value.toLowerCase();
+  let rows = document.querySelectorAll("table tbody tr");
+
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(filter)
+      ? ""
+      : "none";
+  });
+});
+</script>
+
+</body>
+</html>

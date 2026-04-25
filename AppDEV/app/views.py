@@ -173,6 +173,9 @@ def admin_rooms(request):
 def admin_guests(request):
     return render(request, "admin_guests.html")
 
+def admin_bookings(request):
+    return render(request, "admin_bookings.html")
+
 
 # =========================
 # ADD ROOM

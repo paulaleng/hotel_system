@@ -1,0 +1,138 @@
+/* ===== RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+/* wrapper just exists, no flex */
+.container {
+  width: 100%;
+}
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: #020617;
+  z-index: 1000;
+}
+
+/* MAIN CONTENT */
+.main {
+  margin-left: 240px;
+  padding: 20px;
+
+  min-height: 100vh;
+  width: calc(100% - 240px);
+
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  margin-top: 40px;
+}
+
+.topbar h1 {
+  font-size: 25px;
+}
+
+.topbar input {
+  width: 280px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #1e293b;
+  color: #fff;
+  outline: none;
+}
+
+/* ===== TABLE SECTION ===== */
+.table-section {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 40px;
+}
+
+.table-section h2 {
+  margin-bottom: 15px;
+  color: #d4af37;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+thead {
+  background: #020617;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+}
+
+tbody tr {
+  border-bottom: 1px solid #334155;
+}
+
+/* ===== STATUS BADGES ===== */
+.status {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.status.active {
+  background: #16a34a;
+  color: white;
+}
+
+.status.pending {
+  background: #f59e0b;
+  color: #020617;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+.btn.edit {
+  background: #d4af37;
+  color: #020617;
+}
+
+.btn.delete {
+  background: #ef4444;
+  color: white;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}

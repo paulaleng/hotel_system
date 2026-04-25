@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Bookings</title>
+
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'styles/admin_bookings.css' %}">
+<link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
+</head>
+
+<body>
+
+<div class="container">
+
+  {% include "components/sidebar.html" %}
+
+  <main class="main">
+
+    <!-- TOP -->
+    <div class="topbar">
+      <h1>Bookings</h1>
+      <input type="text" id="searchBooking" placeholder="Search bookings...">
+    </div>
+
+    <!-- BOOKINGS LIST -->
+    <div class="bookings">
+
+      <!-- BOOKING CARD -->
+      <div class="booking-card" onclick="openModal(this)">
+
+  <div class="info">
+    <div class="col room">Deluxe Room</div>
+    <div class="col name">John Doe</div>
+    <div class="col date">April 28, 2026</div>
+    <div class="col price">₱5,500</div>
+  </div>
+
+  <div class="actions">
+    <button class="confirm">Confirm</button>
+    <button class="remove">Remove</button>
+  </div>
+
+</div>
+
+      <div class="booking-card" onclick="openModal(this)">
+
+  <div class="info">
+    <div class="col room">Deluxe Room</div>
+    <div class="col name">Mary Smith</div>
+    <div class="col date">May 02, 2026</div>
+    <div class="col price">₱3,200</div>
+  </div>
+
+  <div class="actions">
+    <button class="confirm">Confirm</button>
+    <button class="remove">Remove</button>
+  </div>
+
+</div>
+
+
+<div class="booking-card" onclick="openModal(this)">
+
+  <div class="info">
+    <div class="col room">Suite Room</div>
+    <div class="col name">Alex Lee</div>
+    <div class="col date">May 10, 2026</div>
+    <div class="col price">₱7,000</div>
+  </div>
+
+  <div class="actions">
+    <button class="confirm">Confirm</button>
+    <button class="remove">Remove</button>
+  </div>
+
+</div>
+
+  </main>
+
+</div>
+
+<div id="bookingModal" class="modal">
+
+  <div class="modal-content">
+
+    <span class="close" onclick="closeModal()">&times;</span>
+
+    <h2>Booking Details</h2>
+
+    <div class="details">
+
+      <div class="row">
+        <span class="label">Room:</span>
+        <span id="mRoom"></span>
+      </div>
+
+      <div class="row">
+        <span class="label">Name:</span>
+        <span id="mName"></span>
+      </div>
+
+      <div class="row">
+        <span class="label">Date:</span>
+        <span id="mDate"></span>
+      </div>
+
+      <div class="row">
+        <span class="label">Price:</span>
+        <span id="mPrice"></span>
+      </div>
+
+      <div class="row">
+        <span class="label">Email:</span>
+        <span>sample@email.com</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Contact:</span>
+        <span>09123456789</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Guests:</span>
+        <span>2</span>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function openModal(card) {
+  document.getElementById("mRoom").innerText =
+    card.querySelector(".room").innerText;
+
+  document.getElementById("mName").innerText =
+    card.querySelector(".name").innerText;
+
+  document.getElementById("mDate").innerText =
+    card.querySelector(".date").innerText;
+
+  document.getElementById("mPrice").innerText =
+    card.querySelector(".price").innerText;
+
+  document.getElementById("bookingModal").style.display = "block";
+}
+
+function closeModal() {
+  document.getElementById("bookingModal").style.display = "none";
+}
+
+/* SEARCH */
+document.getElementById("searchBooking").addEventListener("keyup", function () {
+  let filter = this.value.toLowerCase();
+  let cards = document.querySelectorAll(".booking-card");
+
+  cards.forEach(card => {
+    card.style.display = card.textContent.toLowerCase().includes(filter)
+      ? "flex"
+      : "none";
+  });
+});
+</script>
+
+</body>
+</html>
