@@ -55,7 +55,8 @@ class GuestBooking(models.Model):
         ordering = ['-created_at']  # NEW (latest bookings first)
 
     def __str__(self):
-        return f"{self.guest_name} - Room {self.room.room_number}"
+        return f"{self.guest_name} - {self.room}"
+
     
 
 # =========================
@@ -67,8 +68,9 @@ class Booking(models.Model):
         ('Pending', 'Pending'),
         ('Confirmed', 'Confirmed'),
         ('Completed', 'Completed'),
-        ('Cancelled', 'Cancelled'),
+        ('Rejected', 'Rejected'),
     ]
+
 
     ROOM_CHOICES = [
         ('single', 'Single Room'),
@@ -136,8 +138,9 @@ class AdminBooking(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Confirmed', 'Confirmed'),
-        ('Cancelled', 'Cancelled'),
+        ('Rejected', 'Rejected'),
     ]
+
 
     room = models.CharField(max_length=100)  # ✅ CHANGE THIS
 
@@ -161,7 +164,8 @@ class AdminBooking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.guest_name} - {self.room.room_number}"
+        return f"{self.guest_name} - {self.room}"
+
     
 # =========================
 # ADMIN GUEST

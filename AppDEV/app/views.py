@@ -240,9 +240,24 @@ def admin_bookings(request):
 @login_required
 def delete_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
-    booking.delete()
+
+    # ✅ Instead of deleting, mark as Cancelled/Rejected
+    booking.status = 'Cancelled'
+    booking.save()
+
     return redirect('admin_bookings')
 
+# =========================
+# Reject Reservations
+# =========================
+@login_required
+def reject_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    booking.status = 'Rejected'
+    booking.save()
+
+    return redirect('admin_bookings')
 
 
 
@@ -417,22 +432,23 @@ def book_room(request):
 def schedule(request):
     user_email = request.user.email
 
-    # 🔥 UPCOMING = ADMIN CONFIRMED BUT NOT COMPLETED
-    upcoming = AdminBooking.objects.filter(
-        email=user_email,
-        status='Confirmed'
-    ).order_by('-check_in_date')
+    # ✅ ALL BOOKINGS (including Pending, Confirmed, Cancelled)
+    reservations = Booking.objects.filter(
+        email=user_email
+    ).order_by('-created_at')
 
-    # 🔥 HISTORY = COMPLETED BOOKINGS
-    history = AdminBooking.objects.filter(
+    # ✅ HISTORY (optional if completed)
+    history = Booking.objects.filter(
         email=user_email,
         status='Completed'
-    ).order_by('-check_in_date')
+    ).order_by('-created_at')
 
     return render(request, "schedule.html", {
-        "upcoming": upcoming,
+        "reservations": reservations,
         "history": history
     })
+
+
 
 
 # =========================
@@ -440,57 +456,12 @@ def schedule(request):
 # =========================
 @login_required
 def confirm_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
 
-    try:
-        booking = get_object_or_404(Booking, id=booking_id)
+    booking.status = 'Confirmed'
+    booking.save()
 
-        # ✅ DIRECT MATCH USING STRING (NO Room FK PROBLEM)
-        room_name = booking.room
-
-        room_prices = {
-            "single": 2000,
-            "twin": 3200,
-            "standard": 3900,
-            "family": 5000,
-            "deluxe": 5500,
-            "suite": 7000,
-            "superior": 8500,
-            "executive": 10000,
-            "seaview": 12500,
-            "penthouse": 20000,
-        }
-
-        clean_key = room_name.lower().replace(" room", "").strip()
-        base_price = room_prices.get(clean_key, 0)
-
-        # compute days
-        days = (booking.check_out_date - booking.check_in_date).days
-        days = max(days, 1)
-
-        total_price = base_price * days
-
-        # ✅ CREATE ADMIN BOOKING (FIXED)
-        AdminBooking.objects.create(
-            room=booking.room,   # STRING FIX (no FK crash)
-            guest_name=booking.full_name,
-            email=booking.email,
-            contact_number=booking.contact_number,
-            check_in_date=booking.check_in_date,
-            check_out_date=booking.check_out_date,
-            guests=booking.guests,
-            price=total_price,
-            status='Confirmed'
-        )
-
-        booking.status = 'Confirmed'
-        booking.save()
-
-        messages.success(request, "Booking confirmed successfully!")
-        return redirect('admin_bookings')
-
-    except Exception as e:
-        print("CONFIRM ERROR:", e)
-        return redirect('admin_bookings')
+    return redirect('admin_bookings')
 
 
 # =========================

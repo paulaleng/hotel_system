@@ -105,15 +105,32 @@ body {
 }
 
 /* STATUS COLORS */
-.upcoming {
-    background: #e8f0ff;
-    color: #1d4ed8;
+
+/* ✅ PENDING = YELLOW */
+.right-status.pending {
+    background: #facc15;
+    color: #000;
 }
 
-.past {
+/* ✅ CONFIRMED = GREEN */
+.right-status.upcoming {
+    background: #22c55e;
+    color: #fff;
+}
+
+/* ✅ CANCELLED / REJECTED = RED */
+.right-status.cancelled {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* ✅ COMPLETED */
+.right-status.past {
     background: #eeeeee;
     color: #555;
 }
+
+
 
 .tabs {
     display: flex;

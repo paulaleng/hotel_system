@@ -34,10 +34,10 @@
 
     <h3>Upcoming Reservations</h3>
 
-    {% for b in upcoming %}
+    {% for b in reservations %}
     <div class="card">
-        <div class="left">
-            <div class="room">{{ b.room }}</div>
+            <div class="left">
+             <div class="room">{{ b.room }}</div>
         </div>
 
         <div class="middle">
@@ -45,11 +45,20 @@
             <div class="meta">{{ b.guests }}</div>
         </div>
 
-        <div class="right-status upcoming">Confirmed</div>
+        <div class="right-status
+            {% if b.status == 'Pending' %} pending
+            {% elif b.status == 'Confirmed' %} upcoming
+            {% elif b.status == 'Cancelled' %} cancelled
+            {% elif b.status == 'Completed' %} past
+            {% endif %}
+        ">
+        {{ b.status }}
+        </div>
     </div>
     {% empty %}
-    <p>No upcoming reservations</p>
+    <p>No reservations</p>
     {% endfor %}
+
 
 </div>
 

@@ -38,6 +38,8 @@ urlpatterns = [
     path('dashboard/bookings/', views.admin_bookings, name='admin_bookings'),
     path('dashboard/bookings/confirm/<int:booking_id>/', views.confirm_booking, name='confirm_booking'),
     path('dashboard/bookings/delete/<int:booking_id>/', views.delete_booking, name='delete_booking'),
+    path('dashboard/bookings/reject/<int:booking_id>/', views.reject_booking, name='reject_booking'),
+
 
 
 ]
