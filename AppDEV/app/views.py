@@ -94,20 +94,20 @@ def homepage(request):
 def admin_dashboard(request):
     today = now().date()
 
-    total_bookings = GuestBooking.objects.count()
+    total_bookings = Booking.objects.count()
     total_rooms = Room.objects.count()
 
-    booked_rooms_today = Room.objects.filter(
-        bookings__check_in__lte=today,
-        bookings__check_out__gte=today
-    ).distinct().count()
+    booked_rooms_today = Booking.objects.filter(
+        check_in_date__lte=today,
+        check_out_date__gte=today
+    ).values('room').distinct().count()
 
     available_rooms = max(total_rooms - booked_rooms_today, 0)
 
-    check_in_count = GuestBooking.objects.filter(check_in=today).count()
-    check_out_count = GuestBooking.objects.filter(check_out=today).count()
+    check_in_count = Booking.objects.filter(check_in_date=today).count()
+    check_out_count = Booking.objects.filter(check_out_date=today).count()
 
-    recent_reservations = GuestBooking.objects.select_related('room').order_by('-id')[:5]
+    recent_reservations = Booking.objects.order_by('-id')[:5]
 
     context = {
         'total_bookings': total_bookings,
