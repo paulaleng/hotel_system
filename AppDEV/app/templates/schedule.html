@@ -18,103 +18,77 @@
 
     <div class="schedule-container">
 
-        <!-- HEADER -->
         <div class="schedule-header">
             <h2>My Schedule</h2>
             <p>Manage your bookings and stay history</p>
         </div>
 
-        <!-- FILTER NAV -->
-<div class="tabs">
-    <button class="tab active" onclick="filterTab('all', event)">All</button>
-    <button class="tab" onclick="filterTab('reservation', event)">Reservation</button>
-    <button class="tab" onclick="filterTab('history', event)">History</button>
-</div>
+        <div class="tabs">
+            <button class="tab active" onclick="filterTab('all', event)">All</button>
+            <button class="tab" onclick="filterTab('reservation', event)">Reservation</button>
+            <button class="tab" onclick="filterTab('history', event)">History</button>
+        </div>
 
-        <!-- UPCOMING BOOKINGS -->
-<div class="section reservation-section active">
+        <!-- UPCOMING -->
+        <div class="section reservation-section active">
 
     <h3>Upcoming Reservations</h3>
 
+    {% for b in upcoming %}
     <div class="card">
         <div class="left">
-            <div class="room">Deluxe Room</div>
+            <div class="room">{{ b.room }}</div>
         </div>
 
         <div class="middle">
-            <div class="meta">April 30, 2026</div>
-            <div class="meta">2 Guests</div>
+            <div class="meta">{{ b.check_in_date }}</div>
+            <div class="meta">{{ b.guests }}</div>
         </div>
 
         <div class="right-status upcoming">Confirmed</div>
     </div>
+    {% empty %}
+    <p>No upcoming reservations</p>
+    {% endfor %}
 
-    <div class="card">
-        <div class="left">
-            <div class="room">Sea View Suite</div>
-        </div>
+</div>
 
-        <div class="middle">
-            <div class="meta">May 5, 2026</div>
-            <div class="meta">3 Guests</div>
-        </div>
-
-        <div class="right-status upcoming">Confirmed</div>
-    </div>
-
-</div>  <!-- ✅ THIS WAS MISSING -->
-
-<!-- PAST BOOKINGS -->
-<div class="section history-section">
+        <!-- HISTORY -->
+        <div class="section history-section">
 
     <h3>Booking History</h3>
 
+    {% for b in history %}
     <div class="card">
         <div class="left">
-            <div class="room">Standard Room</div>
+            <div class="room">{{ b.room }}</div>
         </div>
 
         <div class="middle">
-            <div class="meta">March 10, 2026</div>
-            <div class="meta">1 Guest</div>
+            <div class="meta">{{ b.check_in_date }}</div>
+            <div class="meta">{{ b.guests }}</div>
         </div>
 
         <div class="right-status past">Completed</div>
     </div>
-
-<div class="card">
-
-    <div class="left">
-        <div class="room">Twin Room</div>
-    </div>
-
-    <div class="middle">
-        <div class="meta">February 18, 2026</div>
-        <div class="meta">2 Guest</div>
-    </div>
-
-    <div class="right-status past">Completed</div>
+    {% empty %}
+    <p>No booking history</p>
+    {% endfor %}
 
 </div>
 
-        </div>
-
     </div>
-
 </div>
 
 <script>
 function filterTab(type, event) {
     const reservation = document.querySelector(".reservation-section");
     const history = document.querySelector(".history-section");
-
     const tabs = document.querySelectorAll(".tab");
 
-    // reset tabs
     tabs.forEach(tab => tab.classList.remove("active"));
     event.target.classList.add("active");
 
-    // reset sections
     reservation.classList.remove("active");
     history.classList.remove("active");
 

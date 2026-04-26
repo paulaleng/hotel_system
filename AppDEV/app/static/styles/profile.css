@@ -12,7 +12,7 @@ body {
     height: 90vh;
 }
 
-/* BIGGER PROFESSIONAL CARD */
+/* MAIN CARD */
 .profile-card {
     width: 650px;
     background: #ffffff;
@@ -24,11 +24,13 @@ body {
     box-shadow: 0 15px 35px rgba(0,0,0,0.12);
 }
 
-/* LEFT SIDE */
+/* LEFT SIDE (FIXED CENTERING) */
 .profile-left {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: center;   /* centers image + button */
+    justify-content: center;
+    gap: 10px;
 }
 
 /* PROFILE IMAGE */
@@ -39,21 +41,21 @@ body {
     object-fit: cover;
     border: 4px solid #ddd;
     cursor: pointer;
-    transition: 0.2s;
+    transition: 0.2s ease-in-out;
+    display: block;
 }
 
 .profile-pic:hover {
     transform: scale(1.05);
 }
 
-/* HIDE INPUT */
+/* HIDE FILE INPUT */
 #uploadPic {
     display: none;
 }
 
-/* EDIT PICTURE BUTTON */
+/* EDIT / ADD PICTURE BUTTON (CENTERED FIX) */
 .edit-pic-btn {
-    margin-top: 12px;
     padding: 8px 14px;
     border: none;
     background: #333;
@@ -61,6 +63,9 @@ body {
     border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
+
+    display: block;
+    margin: 0 auto;   /* PERFECT CENTER */
 }
 
 .edit-pic-btn:hover {
@@ -85,38 +90,16 @@ body {
     font-size: 15px;
 }
 
-/* DATE */
-.date {
-    margin-top: 18px;
-    font-size: 14px;
-    color: #888;
-}
-
-/* EDIT DETAILS BUTTON */
-.edit-details-btn {
-    margin-top: 25px;
-    padding: 10px 16px;
-    border: none;
-    background: #222;
-    color: #fff;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-.edit-details-btn:hover {
-    background: #444;
-}
-
-
-/* TOP NAME + BADGE */
+/* TOP ROW */
 .top-row {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+/* BADGE */
 .badge {
-    background: #e6e6e6;   /* lighter gray */
+    background: #e6e6e6;
     color: #333;
     font-size: 12px;
     padding: 4px 10px;
@@ -124,13 +107,7 @@ body {
     font-weight: 500;
 }
 
-/* EMAIL */
-.email {
-    color: #666;
-    margin-top: 6px;
-}
-
-/* GRID INFO */
+/* INFO GRID */
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -159,6 +136,7 @@ body {
 .date {
     margin-top: 18px;
     font-size: 14px;
+    color: #888;
 }
 
 /* ACTIONS */
@@ -168,14 +146,23 @@ body {
     justify-content: flex-end;
 }
 
-[contenteditable="true"] {
-    outline: 2px solid #ccc;
-    border-radius: 6px;
-    padding: 4px;
-    background: #f9f9f9;
+/* EDIT DETAILS BUTTON */
+.edit-details-btn {
+    margin-top: 25px;
+    padding: 10px 16px;
+    border: none;
+    background: #222;
+    color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
-.editable {
+.edit-details-btn:hover {
+    background: #444;
+}
+
+/* EDITABLE FIELDS */
+[contenteditable="true"] {
     outline: 2px solid #ccc;
     border-radius: 6px;
     padding: 4px;

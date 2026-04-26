@@ -18,18 +18,43 @@
 
     <div class="profile-card">
 
+        <!-- HIDDEN FORM (FOR BACKEND SAVE) -->
+        <form id="hiddenProfileForm" method="POST" enctype="multipart/form-data" style="display:none;">
+            {% csrf_token %}
+            <input type="hidden" name="email" id="hiddenEmail">
+            <input type="hidden" name="phone" id="hiddenPhone">
+            <input type="hidden" name="address" id="hiddenAddress">
+            <input type="file" name="profile_image" id="hiddenImage">
+        </form>
+
         <!-- LEFT -->
         <div class="profile-left">
 
-            <label for="uploadPic">
-                <img id="profileImage"
-                     src="{% static 'images/anonymous.png' %}"
-                     class="profile-pic">
-            </label>
+            <form id="imageForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
 
-            <input type="file" id="uploadPic" accept="image/*">
+                <label for="uploadPic">
+                    <img id="profileImage"
+                         src="{% if profile.profile_image %}{{ profile.profile_image.url }}{% else %}{% static 'images/anonymous.png' %}{% endif %}"
+                         class="profile-pic">
+                </label>
 
-            <button class="edit-pic-btn">Edit Picture</button>
+                <input type="file" id="uploadPic" name="profile_image" hidden>
+
+                <button type="button"
+                        class="edit-pic-btn"
+                        id="picBtn"
+                        onclick="triggerUpload()">
+                    {% if profile.profile_image %}
+                        Edit Picture
+                    {% else %}
+                        Add Picture
+                    {% endif %}
+                </button>
+
+                <button type="submit" id="submitPicBtn" style="display:none;"></button>
+
+            </form>
 
         </div>
 
@@ -37,43 +62,49 @@
         <div class="profile-right">
 
             <div class="top-row">
-    <div class="name" id="profileName" contenteditable="false">John Doe</div>
-    <span class="badge">Guest</span>
-</div>
+                <div class="name" id="profileName">
+                    {{ request.user.username }}
+                </div>
+                <span class="badge">Guest</span>
+            </div>
 
-<div class="email" id="profileEmail" contenteditable="false">johndoe@email.com</div>
+            <!-- ✅ FIXED EMAIL DISPLAY -->
+            <div class="email" id="profileEmail">
+                {{ request.user.email|default:"No email set" }}
+            </div>
 
             <div class="info-grid">
 
                 <div class="info-box">
-    <span>Phone</span>
-    <p id="profilePhone" contenteditable="false">+63 912 345 6789</p>
-</div>
+                    <span>Phone</span>
+                    <p id="profilePhone">{{ profile.contact_number|default:"Not set" }}</p>
+                </div>
 
-<div class="info-box">
-    <span>Address</span>
-    <p id="profileAddress" contenteditable="false">Davao City, Philippines</p>
-</div>
+                <div class="info-box">
+                    <span>Address</span>
+                    <p id="profileAddress">{{ profile.address|default:"Not set" }}</p>
+                </div>
 
                 <div class="info-box">
                     <span>Account Created</span>
-                    <p>Jan 1, 2026</p>
+                    <p>{{ request.user.date_joined|date:"M d, Y" }}</p>
                 </div>
 
                 <div class="info-box">
                     <span>Last Login</span>
-                    <p>Today</p>
+                    <p>{{ request.user.last_login|date:"M d, Y H:i" }}</p>
                 </div>
 
             </div>
 
             <div class="date">
-                Total Bookings: <b>3</b>
+                Total Bookings: <b>{{ total_bookings|default:0 }}</b>
             </div>
 
             <div class="actions">
-                <button class="edit-details-btn" id="editBtn" onclick="toggleEdit()">Edit Details</button>
-        </div>
+                <button type="button" class="edit-details-btn" id="editBtn" onclick="toggleEdit()">Edit Details</button>
+            </div>
+
         </div>
 
     </div>
@@ -81,7 +112,8 @@
 </div>
 
 <script>
-    let isEditing = false;
+
+let isEditing = false;
 
 function toggleEdit() {
     const name = document.getElementById("profileName");
@@ -90,17 +122,12 @@ function toggleEdit() {
     const address = document.getElementById("profileAddress");
     const btn = document.getElementById("editBtn");
 
-    const fields = [name, email, phone, address];
-
     if (!isEditing) {
-        // ENABLE EDIT MODE
-        fields.forEach(field => {
-            field.contentEditable = true;
-            field.style.outline = "2px solid #ccc";
-            field.style.borderRadius = "6px";
-            field.style.padding = "4px";
-            field.style.background = "#f9f9f9";
-        });
+
+        name.contentEditable = true;
+        email.contentEditable = true;
+        phone.contentEditable = true;
+        address.contentEditable = true;
 
         name.focus();
 
@@ -110,32 +137,45 @@ function toggleEdit() {
         isEditing = true;
 
     } else {
-        // DISABLE EDIT MODE
-        fields.forEach(field => {
-            field.contentEditable = false;
-            field.style.outline = "none";
-            field.style.background = "transparent";
-            field.style.padding = "0";
-        });
+
+        name.contentEditable = false;
+        email.contentEditable = false;
+        phone.contentEditable = false;
+        address.contentEditable = false;
+
+        document.getElementById("hiddenEmail").value = email.innerText.trim();
+        document.getElementById("hiddenPhone").value = phone.innerText.trim();
+        document.getElementById("hiddenAddress").value = address.innerText.trim();
+
+        document.getElementById("hiddenProfileForm").submit();
 
         btn.innerText = "Edit Details";
         btn.style.background = "#222";
 
         isEditing = false;
-
-        alert("Profile updated!");
     }
 }
+</script>
+
+<script>
 
 const uploadPic = document.getElementById("uploadPic");
 const profileImage = document.getElementById("profileImage");
+const submitPicBtn = document.getElementById("submitPicBtn");
+
+function triggerUpload() {
+    uploadPic.click();
+}
 
 uploadPic.addEventListener("change", function () {
     const file = this.files[0];
+
     if (file) {
         profileImage.src = URL.createObjectURL(file);
+        submitPicBtn.click();
     }
 });
+
 </script>
 
 </body>

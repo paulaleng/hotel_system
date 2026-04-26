@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User 
 
 # =========================
 # ROOM TABLE
@@ -62,6 +62,14 @@ class GuestBooking(models.Model):
 # BOOKING TABLE
 # =========================
 class Booking(models.Model):
+
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Confirmed', 'Confirmed'),
+        ('Completed', 'Completed'),
+        ('Cancelled', 'Cancelled'),
+    ]
+
     ROOM_CHOICES = [
         ('single', 'Single Room'),
         ('twin', 'Twin Room'),
@@ -75,14 +83,82 @@ class Booking(models.Model):
         ('penthouse', 'Penthouse Room'),
     ]
 
-    room = models.CharField(max_length=50, choices=ROOM_CHOICES)
+    room = models.CharField(max_length=50)
     full_name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)
     email = models.EmailField()
+
     check_in_date = models.DateField()
-    guests = models.CharField(max_length=20)
+    check_out_date = models.DateField()   # ✅ ADDED
+
+    guests = models.IntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    status = models.CharField(        # ✅ ADDED
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='Pending'
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.full_name} - {self.room}"
+
+    
+# =========================
+# USER PROFILE (🔥 MISSING BEFORE — THIS IS THE FIX)
+# =========================
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    contact_number = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+
+    profile_image = models.ImageField(
+        upload_to='profiles/',
+        null=True,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.user.username
+    
+# =========================
+# ADMIN BOOKINGS TABLE
+# (FOR ADMIN DASHBOARD DISPLAY ONLY)
+# =========================
+class AdminBooking(models.Model):
+
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Confirmed', 'Confirmed'),
+        ('Cancelled', 'Cancelled'),
+    ]
+
+    room = models.CharField(max_length=100)  # ✅ CHANGE THIS
+
+    guest_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    contact_number = models.CharField(max_length=15)
+
+    check_in_date = models.DateField()
+    check_out_date = models.DateField(null=True, blank=True)
+
+    guests = models.IntegerField(default=1)
+
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='Pending'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.guest_name} - {self.room.room_number}"

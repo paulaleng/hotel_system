@@ -3,10 +3,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.utils.timezone import now
 from .models import Booking
+from .models import UserProfile 
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
-from .models import GuestBooking, Room
+import json
+from .models import GuestBooking, Room, AdminBooking
 
 
 # =========================
@@ -29,6 +34,44 @@ def admin_login(request):
 
     return render(request, 'admin_login.html')
 
+# =========================
+# PROFILE (FIXED + DB SYNC)
+# =========================
+@login_required
+def profile(request):
+    user = request.user
+    profile, created = UserProfile.objects.get_or_create(user=user)
+
+    if request.method == "POST":
+
+        # update email
+        user.email = request.POST.get("email")
+        user.save()
+
+        # update profile fields
+        profile.contact_number = request.POST.get("phone")
+        profile.address = request.POST.get("address")
+
+        # image upload
+        if "profile_image" in request.FILES:
+            profile.profile_image = request.FILES["profile_image"]
+
+        profile.save()
+
+        messages.success(request, "Profile updated successfully!")
+        return redirect("profile")
+
+    # ✅ COUNT BOOKINGS (for display)
+    total_bookings = Booking.objects.filter(email=user.email).count() if user.email else 0
+
+    return render(request, "profile.html", {
+        "username": user.username,
+        "email": user.email,
+        "date_joined": user.date_joined,
+        "last_login": user.last_login,
+        "profile": profile,
+        "total_bookings": total_bookings,
+    })
 
 # =========================
 # LANDING PAGE
@@ -90,6 +133,11 @@ def admin_logout(request):
 # USER LOGIN
 # =========================
 def user_login(request):
+
+    # ✅ CLEAR OLD MESSAGES (IMPORTANT FIX)
+    storage = get_messages(request)
+    storage.used = True
+
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -100,9 +148,8 @@ def user_login(request):
             login(request, user)
             return redirect('homepage')
         else:
-            return render(request, 'login.html', {
-                'error': 'Invalid username or password'
-            })
+            messages.error(request, "Invalid username or password")
+            return render(request, 'login.html')
 
     return render(request, 'login.html')
 
@@ -154,13 +201,6 @@ def details(request):
     return render(request, 'details.html')
 
 
-def profile(request):
-    return render(request, "profile.html")
-
-
-def schedule(request):
-    return render(request, "schedule.html")
-
 
 # =========================
 # ADMIN ROOMS PAGE
@@ -173,8 +213,37 @@ def admin_rooms(request):
 def admin_guests(request):
     return render(request, "admin_guests.html")
 
+@login_required
 def admin_bookings(request):
-    return render(request, "admin_bookings.html")
+    bookings = Booking.objects.filter(status__iexact='Pending').order_by('-created_at')
+
+    room_prices = {
+        "single": 2000,
+        "twin": 3200,
+        "standard": 3900,
+        "family": 5000,
+        "deluxe": 5500,
+        "suite": 7000,
+        "superior": 8500,
+        "executive": 10000,
+        "seaview": 12500,
+        "penthouse": 20000,
+    }
+
+    for b in bookings:
+        b.total_price = b.price
+
+    return render(request, "admin_bookings.html", {
+        "bookings": bookings
+    })
+
+@login_required
+def delete_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.delete()
+    return redirect('admin_bookings')
+
+
 
 
 # =========================
@@ -241,6 +310,9 @@ def toggle_room_status(request, room_id):
 # =========================
 def room_details(request):
     if request.method == "POST":
+
+        print("ROOM DETAILS VIEW HIT")  # 🔥 DEBUG
+
         room = request.POST.get("room")
         name = request.POST.get("fullName")
         contact = request.POST.get("contactNumber")
@@ -248,15 +320,181 @@ def room_details(request):
         date = request.POST.get("datePicker")
         guests = request.POST.get("guests")
 
-        Booking.objects.create(
-            room=room,
-            full_name=name,
-            contact_number=contact,
-            email=email,
-            check_in_date=date,
-            guests=guests
-        )
+        print(room, name, email)  # 🔥 DEBUG CHECK
 
-        return render(request, "success.html")
+        room_prices = {
+            "single": 2000,
+            "twin": 3200,
+            "standard": 3900,
+            "family": 5000,
+            "deluxe": 5500,
+            "suite": 7000,
+            "superior": 8500,
+            "executive": 10000,
+            "seaview": 12500,
+            "penthouse": 20000,
+        }
+
+        price = room_prices.get(room.lower(), 0)
+
+        Booking.objects.create(
+        room=room,
+        full_name=name,
+        contact_number=contact,
+        email=email,
+        check_in_date=date,
+        guests=guests,
+        price=price,   # ✅ ADD THIS
+        status='Pending'
+)
+
+
+        messages.success(request, "Booking saved!")
+
+        return redirect('rooms')
 
     return render(request, "details.html")
+
+# =========================
+# ✅ NEW API FOR FETCH (IMPORTANT FIX)
+# =========================
+@csrf_exempt
+def book_room(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            room_prices = {
+                "single": 2000,
+                "twin": 3200,
+                "standard": 3900,
+                "family": 5000,
+                "deluxe": 5500,
+                "suite": 7000,
+                "superior": 8500,
+                "executive": 10000,
+                "seaview": 12500,
+                "penthouse": 20000,
+            }
+
+            room_name = (data.get("room") or "").lower().replace(" room", "").strip()
+            price = room_prices.get(room_name, 0)
+
+            Booking.objects.create(
+            room=data.get("room"),
+            full_name=data.get("full_name"),
+            contact_number=data.get("contact_number"),
+            email=data.get("email"),
+            check_in_date=data.get("check_in_date"),
+            check_out_date=data.get("check_out_date"),
+            guests=data.get("guests"),
+            price=price,   # ✅ ADD THIS
+            status='Pending'
+)
+
+            return JsonResponse({
+                "status": "success",
+                "message": "Booking saved successfully"
+            })
+
+        except Exception as e:
+            print("ERROR:", e)  # 🔥 DEBUG
+            return JsonResponse({
+                "status": "error",
+                "message": str(e)
+            })
+
+    return JsonResponse({
+        "status": "error",
+        "message": "Invalid method"
+    })
+
+
+# =========================
+# SCHEDULE (NEW FIXED)
+# =========================
+@login_required
+def schedule(request):
+    user_email = request.user.email
+
+    # 🔥 UPCOMING = ADMIN CONFIRMED BUT NOT COMPLETED
+    upcoming = AdminBooking.objects.filter(
+        email=user_email,
+        status='Confirmed'
+    ).order_by('-check_in_date')
+
+    # 🔥 HISTORY = COMPLETED BOOKINGS
+    history = AdminBooking.objects.filter(
+        email=user_email,
+        status='Completed'
+    ).order_by('-check_in_date')
+
+    return render(request, "schedule.html", {
+        "upcoming": upcoming,
+        "history": history
+    })
+
+
+# =========================
+# ADMIN BOOKING
+# =========================
+@login_required
+def confirm_booking(request, booking_id):
+
+    try:
+        booking = get_object_or_404(Booking, id=booking_id)
+
+        # ✅ DIRECT MATCH USING STRING (NO Room FK PROBLEM)
+        room_name = booking.room
+
+        room_prices = {
+            "single": 2000,
+            "twin": 3200,
+            "standard": 3900,
+            "family": 5000,
+            "deluxe": 5500,
+            "suite": 7000,
+            "superior": 8500,
+            "executive": 10000,
+            "seaview": 12500,
+            "penthouse": 20000,
+        }
+
+        clean_key = room_name.lower().replace(" room", "").strip()
+        base_price = room_prices.get(clean_key, 0)
+
+        # compute days
+        days = (booking.check_out_date - booking.check_in_date).days
+        days = max(days, 1)
+
+        total_price = base_price * days
+
+        # ✅ CREATE ADMIN BOOKING (FIXED)
+        AdminBooking.objects.create(
+            room=booking.room,   # STRING FIX (no FK crash)
+            guest_name=booking.full_name,
+            email=booking.email,
+            contact_number=booking.contact_number,
+            check_in_date=booking.check_in_date,
+            check_out_date=booking.check_out_date,
+            guests=booking.guests,
+            price=total_price,
+            status='Confirmed'
+        )
+
+        booking.status = 'Confirmed'
+        booking.save()
+
+        messages.success(request, "Booking confirmed successfully!")
+        return redirect('admin_bookings')
+
+    except Exception as e:
+        print("CONFIRM ERROR:", e)
+        return redirect('admin_bookings')
+
+
+
+
+
+
+

@@ -17,13 +17,12 @@
         <h1>Welcome Back</h1>
         <p>Login to continue your booking</p>
 
-        {% if messages %}
+        {% if request.path == "/login/" %}
     {% for message in messages %}
-        <p style="color:green; margin-bottom:10px;">
-            {{ message }}
-        </p>
+        <div class="alert">{{ message }}</div>
     {% endfor %}
 {% endif %}
+
 
         <form method="POST">
             {% csrf_token %}
