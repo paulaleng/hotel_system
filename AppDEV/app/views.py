@@ -95,30 +95,43 @@ def admin_dashboard(request):
     today = now().date()
 
     total_bookings = Booking.objects.count()
-    total_rooms = Room.objects.count()
 
-    booked_rooms_today = Booking.objects.filter(
-        check_in_date__lte=today,
-        check_out_date__gte=today
-    ).values('room').distinct().count()
+    # =========================
+    # TOTAL GUESTS (auth_user)
+    # =========================
+    total_guests = User.objects.filter(
+        is_staff=False,
+        is_superuser=False
+    ).count()
 
-    available_rooms = max(total_rooms - booked_rooms_today, 0)
+    # =========================
+    # CHECK IN (ALL CONFIRMED BOOKINGS)
+    # =========================
+    check_in_count = Booking.objects.filter(
+        status='Confirmed'
+    ).count()
 
-    check_in_count = Booking.objects.filter(check_in_date=today).count()
-    check_out_count = Booking.objects.filter(check_out_date=today).count()
+    # =========================
+    # CHECK OUT (TODAY ONLY + CONFIRMED)
+    # =========================
+    check_out_count = Booking.objects.filter(
+        status='Confirmed',
+        check_out_date=today
+    ).count()
 
     recent_reservations = Booking.objects.order_by('-id')[:5]
 
     context = {
         'total_bookings': total_bookings,
-        'available_rooms': available_rooms,
-        'booked_rooms_today': booked_rooms_today,
+        'total_guests': total_guests,
         'check_in_count': check_in_count,
         'check_out_count': check_out_count,
         'recent_reservations': recent_reservations,
     }
 
     return render(request, 'admin_dashboard.html', context)
+
+
 
 
 # =========================

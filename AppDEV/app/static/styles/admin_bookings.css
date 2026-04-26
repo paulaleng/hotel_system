@@ -12,15 +12,12 @@ body {
 }
 
 /* =========================
-   LAYOUT
+   LAYOUT (UNCHANGED)
 ========================= */
 .container {
-  display: block; /* IMPORTANT: prevents layout gaps */
+  display: block;
 }
 
-/* =========================
-   SIDEBAR SPACE HANDLING
-========================= */
 .sidebar {
   position: fixed;
   top: 0;
@@ -30,15 +27,11 @@ body {
   background: #020617;
 }
 
-/* =========================
-   MAIN CONTENT
-========================= */
 .main {
   margin-left: 240px;
   padding: 20px;
   width: calc(100% - 240px);
   min-height: 100vh;
-  box-sizing: border-box;
 }
 
 /* =========================
@@ -48,14 +41,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0 0 20px 0; /* removes extra spacing */
   margin-top: 50px;
   margin-bottom: 40px;
 }
 
 .topbar h1 {
   font-size: 24px;
-  margin: 0;
 }
 
 .topbar input {
@@ -69,7 +60,7 @@ body {
 }
 
 /* =========================
-   BOOKINGS LIST
+   BOOKINGS
 ========================= */
 .bookings {
   display: flex;
@@ -77,9 +68,6 @@ body {
   gap: 15px;
 }
 
-/* =========================
-   BOOKING CARD
-========================= */
 .booking-card {
   background: #1e293b;
   padding: 18px 20px;
@@ -98,42 +86,22 @@ body {
   background: #243045;
 }
 
-/* =========================
-   INFO SECTION
-========================= */
-.info h3 {
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-
-.info p {
-  font-size: 13px;
-  color: #94a3b8;
-}
-
-.info span {
-  color: #d4af37;
-  font-weight: 600;
-}
-
+/* INFO */
 .info {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1fr;
   gap: 20px;
-  align-items: center;
   width: 100%;
 }
 
-/* each column */
 .info .col {
   font-size: 14px;
   color: #cbd5f5;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* highlight key values */
 .info .room {
   color: #d4af37;
   font-weight: 600;
@@ -144,9 +112,7 @@ body {
   font-weight: 600;
 }
 
-/* =========================
-   ACTION BUTTONS
-========================= */
+/* ACTIONS */
 .actions {
   display: flex;
   gap: 10px;
@@ -173,64 +139,177 @@ body {
 }
 
 /* =========================
-   MODAL
+   MODAL BACKDROP (FIXED)
 ========================= */
 .modal {
   display: none;
   position: fixed;
-  z-index: 999;
   inset: 0;
-  background: rgba(0,0,0,0.6);
-}
 
-/* modal box */
-.modal-content {
-  background: #1e293b;
-  width: 420px;
-  margin: 10% auto;
-  padding: 25px;
-  border-radius: 12px;
-  position: relative;
-}
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(7px);
 
-/* close button */
-.close {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-  font-size: 22px;
-  cursor: pointer;
-  color: #fff;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 999;
+  padding: 20px;
 }
 
 /* =========================
-   DETAILS INSIDE MODAL
+   MODAL CARD (UNIFIED STYLE)
 ========================= */
-.details p {
-  margin: 10px 0;
+.modal-content {
+  width: 100%;
+  max-width: 460px;
+
+  background: #0b1220;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+
+  padding: 26px;
+
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+
+  text-align: center;
+
+  animation: pop 0.18s ease-out;
+}
+
+@keyframes pop {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* =========================
+   TITLES
+========================= */
+.modal-content h2 {
+  font-size: 20px;
+  color: #f8fafc;
+  margin-bottom: 10px;
+}
+
+/* TEXT */
+.modal-content p {
   color: #cbd5f5;
+  font-size: 14px;
+  margin-top: 8px;
 }
 
-.details strong {
-  color: #d4af37;
-}
-
+/* =========================
+   DETAILS MODAL
+========================= */
 .details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 15px;
 }
 
 .row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #334155;
+  padding: 10px 12px;
+
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
 }
 
 .label {
   color: #94a3b8;
+  font-size: 13px;
 }
 
 .row span:last-child {
   color: #f1f5f9;
+  font-size: 13px;
   font-weight: 500;
+}
+
+/* =========================
+   CLOSE BUTTON
+========================= */
+.close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+
+  font-size: 20px;
+  color: #94a3b8;
+
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #f1f5f9;
+}
+
+/* =========================
+   CONFIRM BUTTON
+========================= */
+.confirm-final {
+  margin-top: 15px;
+  width: 100%;
+
+  background: #16a34a;
+  color: white;
+
+  border: none;
+  padding: 12px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirm-final:hover {
+  background: #15803d;
+}
+
+/* =========================
+   REMOVE MODAL BUTTONS
+========================= */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.remove-final {
+  flex: 1;
+  background: #ef4444;
+  border: none;
+  padding: 10px;
+
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  flex: 1;
+  background: #334155;
+  border: none;
+  padding: 10px;
+
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.remove-final:hover {
+  background: #dc2626;
+}
+
+.cancel-btn:hover {
+  background: #475569;
 }

@@ -8,6 +8,16 @@
 
 <link rel="stylesheet" href="{% static 'styles/admin_bookings.css' %}">
 <link rel="stylesheet" href="{% static 'styles/sidebar.css' %}">
+
+<style>
+/* small critical fix to ensure clicks work */
+.actions button {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto;
+}
+</style>
+
 </head>
 
 <body>
@@ -18,18 +28,18 @@
 
   <main class="main">
 
-    <!-- TOP -->
     <div class="topbar">
       <h1>Bookings</h1>
       <input type="text" id="searchBooking" placeholder="Search bookings...">
     </div>
 
-    <!-- BOOKINGS LIST -->
     <div class="bookings">
 
       {% for b in bookings %}
 
-      <div class="booking-card" onclick="openModal(this)"
+      <!-- REMOVED onclick HERE (FIX FOR BUTTON ISSUE) -->
+      <div class="booking-card"
+           data-id="{{ b.id }}"
            data-room="{{ b.room }}"
            data-name="{{ b.full_name }}"
            data-date="{{ b.check_in_date }}"
@@ -47,16 +57,17 @@
 
         <div class="actions">
 
-          <!-- ✅ CONFIRM BUTTON (IMPORTANT) -->
-          <a href="{% url 'confirm_booking' b.id %}">
-            <button class="confirm">Confirm</button>
-          </a>
+          <button type="button"
+            class="confirm"
+            onclick="event.stopPropagation(); openConfirmModal('{{ b.id }}')">
+            Confirm
+          </button>
 
-          <form method="POST" action="{% url 'delete_booking' b.id %}">
-              {% csrf_token %}
-             <button class="remove">Remove</button>
-          </form>
-
+          <button type="button"
+            class="remove"
+            onclick="event.stopPropagation(); openRemoveModal('{{ b.id }}')">
+            Remove
+          </button>
 
         </div>
 
@@ -72,9 +83,8 @@
 
 </div>
 
-<!-- MODAL -->
+<!-- BOOKING MODAL -->
 <div id="bookingModal" class="modal">
-
   <div class="modal-content">
 
     <span class="close" onclick="closeModal()">&times;</span>
@@ -82,132 +92,112 @@
     <h2>Booking Details</h2>
 
     <div class="details">
-
-      <div class="row">
-        <span class="label">Room:</span>
-        <span id="mRoom"></span>
-      </div>
-
-      <div class="row">
-        <span class="label">Name:</span>
-        <span id="mName"></span>
-      </div>
-
-      <div class="row">
-        <span class="label">Date:</span>
-        <span id="mDate"></span>
-      </div>
-
-      <div class="row">
-        <span class="label">Price:</span>
-        <span id="mPrice"></span>
-      </div>
-
-      <div class="row">
-        <span class="label">Email:</span>
-        <span id="mEmail"></span>
-      </div>
-
-      <div class="row">
-        <span class="label">Contact:</span>
-        <span id="mContact"></span>
-      </div>
-
-      <div class="row">
-        <span class="label">Guests:</span>
-        <span id="mGuests"></span>
-      </div>
-
+      <div class="row"><span class="label">Room:</span><span id="mRoom"></span></div>
+      <div class="row"><span class="label">Name:</span><span id="mName"></span></div>
+      <div class="row"><span class="label">Date:</span><span id="mDate"></span></div>
+      <div class="row"><span class="label">Price:</span><span id="mPrice"></span></div>
+      <div class="row"><span class="label">Email:</span><span id="mEmail"></span></div>
+      <div class="row"><span class="label">Contact:</span><span id="mContact"></span></div>
+      <div class="row"><span class="label">Guests:</span><span id="mGuests"></span></div>
     </div>
 
   </div>
-
 </div>
 
+<!-- CONFIRM MODAL -->
 <div id="confirmModal" class="modal">
   <div class="modal-content">
 
-    <span class="close" onclick="closeConfirmModal()">&times;</span>
+    <h2>Reservation Confirmed</h2>
+    <p>Booking successfully confirmed.</p>
 
-    <h2>Confirm Booking</h2>
-
-    <div id="confirmDetails"></div>
-
-    <form id="confirmForm" method="POST">
-      {% csrf_token %}
-      <button type="submit" class="confirm-final">
-        Confirm Now
-      </button>
-    </form>
+    <button class="confirm-final" onclick="submitConfirm()">OK</button>
 
   </div>
 </div>
 
+<!-- REMOVE MODAL -->
+<div id="removeModal" class="modal">
+  <div class="modal-content">
+
+    <h2>Are you sure?</h2>
+    <p>This booking will be permanently removed.</p>
+
+    <div class="modal-actions">
+      <button class="remove-final" onclick="submitRemove()">Remove</button>
+      <button class="cancel-btn" onclick="closeRemoveModal()">Cancel</button>
+    </div>
+
+  </div>
+</div>
 
 <script>
+
+let selectedBookingId = null;
+
+/* OPEN DETAILS */
 function openModal(card) {
   document.getElementById("mRoom").innerText = card.dataset.room;
   document.getElementById("mName").innerText = card.dataset.name;
   document.getElementById("mDate").innerText = card.dataset.date;
   document.getElementById("mPrice").innerText = card.dataset.price;
-
   document.getElementById("mEmail").innerText = card.dataset.email;
   document.getElementById("mContact").innerText = card.dataset.contact;
   document.getElementById("mGuests").innerText = card.dataset.guests;
 
-  document.getElementById("bookingModal").style.display = "block";
+  document.getElementById("bookingModal").style.display = "flex";
 }
 
 function closeModal() {
   document.getElementById("bookingModal").style.display = "none";
 }
 
-/* SEARCH */
-window.onload = function () {
-  const search = document.getElementById("searchBooking");
-
-  search.addEventListener("keyup", function () {
-    let filter = this.value.toLowerCase();
-    let cards = document.querySelectorAll(".booking-card");
-
-    cards.forEach(card => {
-      card.style.display = card.textContent.toLowerCase().includes(filter)
-        ? "flex"
-        : "none";
-    });
+/* CLICK FIX (THIS IS WHY BUTTONS WERE NOT WORKING) */
+document.querySelectorAll(".booking-card").forEach(card => {
+  card.addEventListener("click", function (e) {
+    if (e.target.closest(".actions")) return;
+    openModal(this);
   });
-};
+});
 
-
-let selectedBookingId = null;
-
-function openConfirmModal(id, card) {
+/* CONFIRM */
+function openConfirmModal(id) {
   selectedBookingId = id;
-
-  // copy details from card
-  document.getElementById("confirmDetails").innerHTML =
-    `
-    <p><b>Room:</b> ${card.dataset.room}</p>
-    <p><b>Name:</b> ${card.dataset.name}</p>
-    <p><b>Date:</b> ${card.dataset.date}</p>
-    <p><b>Price:</b> ${card.dataset.price}</p>
-    <p><b>Email:</b> ${card.dataset.email}</p>
-    <p><b>Contact:</b> ${card.dataset.contact}</p>
-    <p><b>Guests:</b> ${card.dataset.guests}</p>
-    `;
-
-  // attach backend URL
-  document.getElementById("confirmForm").action =
-    `/dashboard/bookings/confirm/${id}/`;
-
-  document.getElementById("confirmModal").style.display = "block";
+  document.getElementById("confirmModal").style.display = "flex";
 }
 
-function closeConfirmModal() {
-  document.getElementById("confirmModal").style.display = "none";
+function submitConfirm() {
+  window.location.href = "/dashboard/bookings/confirm/" + selectedBookingId + "/";
 }
 
+/* REMOVE */
+function openRemoveModal(id) {
+  selectedBookingId = id;
+  document.getElementById("removeModal").style.display = "flex";
+}
 
+function submitRemove() {
+  fetch("/dashboard/bookings/delete/" + selectedBookingId + "/", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "X-CSRFToken": "{{ csrf_token }}",
+    }
+  }).then(() => location.reload());
+}
+
+function closeRemoveModal() {
+  document.getElementById("removeModal").style.display = "none";
+}
+
+/* CLOSE ON BACKDROP CLICK */
+document.addEventListener("click", function(e) {
+  document.querySelectorAll(".modal").forEach(modal => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+});
 
 </script>
 
