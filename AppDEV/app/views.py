@@ -493,7 +493,30 @@ def confirm_booking(request, booking_id):
         return redirect('admin_bookings')
 
 
+# =========================
+# Admin Guests
+# =========================
 
+@login_required
+def admin_guests(request):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    guests = User.objects.all().order_by('-date_joined')
+
+    return render(request, 'admin_guests.html', {
+        'guests': guests
+    })
+
+
+@login_required
+def delete_guest(request, user_id):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    user = get_object_or_404(User, id=user_id)
+    user.delete()
+    return redirect('admin_guests')
 
 
 
