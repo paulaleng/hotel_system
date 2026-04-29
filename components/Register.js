@@ -95,11 +95,11 @@ export default function Register({ switchScreen }) {
 
           {/* LINK */}
           <TouchableOpacity onPress={() => switchScreen('login')}>
-        <Text style={styles.link}>
-        Don't have an account?{' '}
-        <Text style={styles.linkClick} onPress={() => switchScreen('register')}>Login</Text>
-        </Text>
-          </TouchableOpacity>
+            <Text style={styles.link}>
+              Already have an account?{' '}
+              <Text style={styles.linkClick}>Login</Text>
+              </Text>
+              </TouchableOpacity>
 
         </View>
 
