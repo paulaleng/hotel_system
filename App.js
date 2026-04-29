@@ -2,6 +2,8 @@ import { useState } from 'react';
 import Landing from './components/landing';
 import Login from './components/Login';
 import Register from './components/Register';
+import Rooms from './components/room';
+import RoomDetails from './components/details';
 
 export default function App() {
   const [screen, setScreen] = useState('landing');
@@ -20,5 +22,13 @@ export default function App() {
 
   if (screen === 'register') {
     return <Register switchScreen={switchScreen} />;
+  }
+
+   if (screen === 'Rooms') {
+    return <Rooms switchScreen={switchScreen} />;
+  }
+
+  if (screen === 'RoomDetails') {
+    return <RoomDetails switchScreen={switchScreen} />;
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
+import Rooms from './room';
 
 export default function Login({ switchScreen }) {
   const [username, setUsername] = useState('');
@@ -45,7 +46,7 @@ export default function Login({ switchScreen }) {
           </View>
 
           {/* BUTTON */}
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={() => switchScreen('Rooms')}>
             <Text style={styles.buttonText}>LOGIN</Text>
           </TouchableOpacity>
 
