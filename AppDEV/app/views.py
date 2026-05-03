@@ -9,9 +9,10 @@ from .models import Booking
 from .models import UserProfile 
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.utils.text import slugify
 
 import json
-from .models import GuestBooking, Room, AdminBooking
+from .models import GuestBooking, Room, AdminBooking, RoomImage
 
 
 # =========================
@@ -204,6 +205,13 @@ def register(request):
 # =========================
 def rooms(request):
     room_list = Room.objects.filter(is_available=True)
+
+    for room in room_list:
+        if room.amenities:
+            room.amenities_list = [a.strip() for a in room.amenities.split(",")]
+        else:
+            room.amenities_list = []
+
     return render(request, 'rooms.html', {'rooms': room_list})
 
 
@@ -211,8 +219,23 @@ def rooms(request):
 # ROOM DETAILS PAGE
 # =========================
 def details(request):
-    return render(request, 'details.html')
+    room_slug = request.GET.get('room')
 
+    room = None
+    if room_slug:
+        room = Room.objects.filter(
+            room_type__iexact=room_slug.replace("-", " ")
+        ).first()
+
+        # 🔥 THIS IS THE FIX
+        if room and room.amenities:
+            room.amenities_list = [a.strip() for a in room.amenities.split(",")]
+        else:
+            room.amenities_list = []
+
+    return render(request, 'details.html', {
+        'room': room
+    })
 
 
 # =========================
@@ -220,8 +243,27 @@ def details(request):
 # =========================
 @login_required
 def admin_rooms(request):
-    rooms = Room.objects.all()
-    return render(request, 'admin_rooms.html', {'rooms': rooms})
+
+    if request.method == "POST":
+        Room.objects.create(
+            room_type=request.POST.get('room_type'),
+            price=request.POST.get('price'),
+            max_guests=request.POST.get('max_guests'),
+            amenities=request.POST.get('amenities'),
+            details=request.POST.get('details'),
+            image=request.FILES.get('image'),
+            is_available=True
+        )
+
+        return redirect('admin_rooms')
+
+    rooms = Room.objects.all().order_by('-created_at')
+
+    print("ROOM COUNT:", rooms.count())  # DEBUG
+
+    return render(request, 'admin_rooms.html', {
+        'rooms': rooms
+    })
 
 def admin_guests(request):
     return render(request, "admin_guests.html")
@@ -275,40 +317,29 @@ def reject_booking(request, booking_id):
 
 
 # =========================
-# ADD ROOM
-# =========================
-@login_required
-def add_room(request):
-    if request.method == "POST":
-        Room.objects.create(
-            room_number=request.POST.get('room_number'),
-            room_type=request.POST.get('room_type'),
-            price=request.POST.get('price'),
-            image=request.FILES.get('image'),
-            is_available=True
-        )
-        return redirect('admin_rooms')  # IMPORTANT
-
-    return render(request, 'add_room.html')
-
-
-# =========================
 # EDIT ROOM
 # =========================
 @login_required
 def edit_room(request, room_id):
+
     room = get_object_or_404(Room, id=room_id)
 
     if request.method == "POST":
-        room.room_number = request.POST.get('room_number')
-        room.room_type = request.POST.get('room_type')
-        room.price = request.POST.get('price')
+
+        room.room_type = request.POST.get('room_type') or room.room_type
+        room.price = request.POST.get('price') or room.price
+        room.max_guests = request.POST.get('max_guests') or room.max_guests
+        room.amenities = request.POST.get('amenities') or room.amenities
+        room.details = request.POST.get('details') or room.details
 
         if request.FILES.get('image'):
             room.image = request.FILES.get('image')
 
         room.save()
-        return redirect('admin_rooms')  # FIXED
+
+        print("🔥 ROOM UPDATED SUCCESSFULLY")
+
+        return redirect('admin_rooms')
 
     return render(request, 'edit_room.html', {'room': room})
 
@@ -409,6 +440,7 @@ def book_room(request):
             price = room_prices.get(room_name, 0)
 
             Booking.objects.create(
+            user=request.user,   # 🔥 IMPORTANT
             room=data.get("room"),
             full_name=data.get("full_name"),
             contact_number=data.get("contact_number"),
@@ -486,7 +518,13 @@ def admin_guests(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    guests = User.objects.all().order_by('-date_joined')
+    guests = User.objects.filter(
+        is_staff=False,
+        is_superuser=False
+    ).order_by('-date_joined')
+
+    for g in guests:
+        g.total_bookings = Booking.objects.filter(user=g).count()
 
     return render(request, 'admin_guests.html', {
         'guests': guests

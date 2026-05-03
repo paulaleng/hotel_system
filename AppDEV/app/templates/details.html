@@ -15,524 +15,150 @@
 
 {% include 'components/navbar.html' %}
 
+{% if room %}
+
 <!-- HERO -->
-<div class="hero">
+<div class="hero" style="background-image: url('{{ room.image.url }}');">
     <div class="hero-content">
-        <h1 id="roomName">Room</h1>
-        <p id="roomTagline">Comfort and elegance</p>
+        <h1>{{ room.room_type }}</h1>
+        <p>Luxury comfort awaits</p>
     </div>
 </div>
 
 <div class="container">
 
-    <!-- LEFT -->
+    <!-- LEFT SIDE -->
     <div class="left">
 
         <!-- DESCRIPTION -->
         <div class="card">
             <h2>Description</h2>
-
-            <p id="desc1"></p>
-            <p id="desc2"></p>
+            <p>{{ room.details }}</p>
         </div>
 
         <!-- GALLERY -->
         <div class="card">
             <h2>Room Gallery</h2>
-            <div class="gallery" id="gallery"></div>
+            <div class="gallery">
+
+                {% if room.roomimage_set.all %}
+                    {% for img in room.roomimage_set.all %}
+                        <img src="{{ img.image.url }}">
+                    {% endfor %}
+                {% else %}
+                    <img src="{{ room.image.url }}">
+                {% endif %}
+
+            </div>
         </div>
 
         <!-- AMENITIES -->
         <div class="card">
             <h2>Amenities</h2>
-            <ul class="amenities" id="amenities"></ul>
+            <ul class="amenities">
+                {% for item in room.amenities_list %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
         </div>
 
     </div>
 
-<div class="right">
-
+    <!-- RIGHT SIDE -->
     <div class="right">
 
-    <div class="booking" id="bookingCard">
+        <div class="booking" id="bookingCard">
 
-        <form id="bookingForm" onsubmit="bookNow(event)">
-            <input type="hidden" name="room" id="roomField">
+            <form id="bookingForm" onsubmit="bookNow(event)">
 
-        <!-- PRICE HEADER -->
-        <div class="price-block">
-            <div class="price" id="price"></div>
-            <p class="price-note">per night • taxes included</p>
+                <!-- HIDDEN ROOM FIELD -->
+                <input type="hidden" name="room" id="roomField" value="{{ room.room_type }}">
+
+                <!-- PRICE -->
+                <div class="price-block">
+                    <div class="price">₱{{ room.price }}</div>
+                    <p class="price-note">per night • taxes included</p>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- CHECK IN -->
+                <div class="field">
+                    <label>Check-in Date</label>
+                    <input type="date" id="datePicker" required>
+                </div>
+
+                <!-- CHECK OUT -->
+                <div class="field">
+                    <label>Check-out Date</label>
+                    <input type="date" id="checkOutDate" required>
+                </div>
+
+                <!-- NAME -->
+                <div class="field">
+                    <label>Full Name</label>
+                    <input type="text" id="fullName" required>
+                </div>
+
+                <!-- CONTACT -->
+                <div class="field">
+                    <label>Contact Number</label>
+                    <input type="tel" id="contactNumber" required>
+                </div>
+
+                <!-- EMAIL -->
+                <div class="field">
+                    <label>Email Address</label>
+                    <input type="email" id="emailAddress" required>
+                </div>
+
+                  <!-- GUESTS -->
+                <div class="field">
+                    <label>Guests</label>
+                    <div class="select-wrapper">
+                        <select id="guests" required>
+                            <option value="1">1 Guest</option>
+                            <option value="2">2 Guests</option>
+                            <option value="3">3 Guests</option>
+                            <option value="4">4 Guests</option>
+
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TOTAL -->
+                <div class="field">
+                    <label>Total Price</label>
+                    <div id="totalPrice" style="font-weight:bold; font-size:18px;">
+                        ₱0
+                    </div>
+                </div>
+
+                <!-- BUTTON -->
+                <button type="submit">Book Now</button>
+
+            </form>
+
         </div>
-
-        <!-- DIVIDER -->
-        <div class="divider"></div>
-
-        <!-- DATE -->
-        <div class="field">
-            <label>Check-in Date</label>
-            <input type="date" id="datePicker" required>
-        </div>
-
-        <!-- ✅ NEW CHECK-OUT -->
-        <div class="field">
-            <label>Check-out Date</label>
-            <input type="date" id="checkOutDate" required>
-        </div>
-
-        <!-- FULL NAME -->
-        <div class="field">
-            <label>Full Name</label>
-            <input type="text" id="fullName" placeholder="Enter your full name" required>
-        </div>
-
-        <!-- CONTACT NUMBER -->
-        <div class="field">
-            <label>Contact Number</label>
-            <input type="tel" id="contactNumber" placeholder="09XXXXXXXXX" required>
-        </div>
-
-        <!-- EMAIL -->
-        <div class="field">
-            <label>Email Address</label>
-            <input type="email" id="emailAddress" placeholder="you@example.com" required>
-        </div>
-
-        <!-- GUESTS -->
-        <div class="field">
-            <label>Guests</label>
-            <div class="select-wrapper">
-                <select id="guests" required>
-                    <option value="1">1 Guest</option>
-                    <option value="2">2 Guests</option>
-                    <option value="3">3 Guests</option>
-                    <option value="4">4 Guests</option>
-
-                </select>
-            </div>
-        </div>
-
-        <!-- BENEFITS -->
-        <div class="benefits">
-            <p>✔ Free cancellation</p>
-            <p>✔ Instant confirmation</p>
-            <p>✔ Secure booking</p>
-        </div>
-
-        <!-- NOTE -->
-        <div class="note">
-            Check-in 2:00 PM • Check-out 12:00 PM
-        </div>
-       
-        <!-- TOTAL PRICE -->
-        <div class="field">
-            <label>Total Price</label>
-            <div id="totalPrice" style="font-weight:bold; font-size:18px;">₱0</div>
-        </div>
-
-
-        <!-- CTA -->
-        <button type="submit">Book Now</button>
-
-        </form>
 
     </div>
 
 </div>
 
+{% else %}
+
+<!-- IF ROOM NOT FOUND -->
+<div style="text-align:center; margin-top:100px;">
+    <h2>Room not found</h2>
+    <a href="/rooms/">Go back to rooms</a>
+</div>
+
+{% endif %}
+
+<!-- =========================
+     BOOKING SCRIPT (API ONLY)
+========================= -->
 <script>
-
-const rooms = {
-
-    single: {
-        name: "Single Room",
-        price: 2000,
-        hero: "{% static 'images/single.png' %}",
-        images: [
-            "{% static 'images/single.png' %}",
-            "{% static 'images/single.png' %}",
-            "{% static 'images/single.png' %}"
-        ],
-        desc: [
-            "Perfect for solo travelers who want a simple and peaceful stay.",
-            "A budget-friendly room with essential comfort and convenience."
-        ],
-        amenities: ["Free WiFi","Air-conditioned","Basic toiletries"]
-    },
-
-    twin: {
-        name: "Twin Room",
-        price: 3200,
-        hero: "{% static 'images/twin.png' %}",
-        images: [
-            "{% static 'images/twin.png' %}",
-            "{% static 'images/twin.png' %}",
-            "{% static 'images/twin.png' %}"
-        ],
-        desc: [
-            "Comfortable room with two beds for friends or colleagues.",
-            "Ideal for shared stays with complete amenities."
-        ],
-        amenities: ["Free WiFi","Air-conditioned","Basic toiletries","Extra towels", "Complimentary bottled water"]
-    },
-
-    standard: {
-        name: "Standard Room",
-        price: 3900,
-        hero: "{% static 'images/standard.png' %}",
-        images: [
-            "{% static 'images/standard1.png' %}",
-            "{% static 'images/standard2.png' %}",
-            "{% static 'images/standard3.png' %}"
-        ],
-        desc: [
-            "Cozy and comfortable room perfect for relaxation.",
-            "Includes essential features for a satisfying stay."
-        ],
-        amenities: ["Free WiFi","Air-conditioned","Basic toiletries", "Smart TV","Daily housekeeping", "Complimentary bottled water", "Extra towels"]
-    },
-
-    family: {
-        name: "Family Room",
-        price: 5000,
-        hero: "{% static 'images/family.png' %}",
-        images: [
-            "{% static 'images/family.png' %}",
-            "{% static 'images/family.png' %}",
-            "{% static 'images/family.png' %}"
-        ],
-        desc: [
-            "Spacious room designed for families.",
-            "Extra space and comfort for group stays."
-        ],
-        amenities: ["Free WiFi","Extra beds","Kids-friendly","Smart TV", "Daily housekeeping", "Extra Towels", "Complimentary bottled water", "Basic toiletries", "Air-conditioned"]
-    },
-
-    deluxe: {
-        name: "Deluxe Room",
-        price: 5500,
-        hero: "{% static 'images/deluxe.png' %}",
-        images: [
-            "{% static 'images/deluxe1.png' %}",
-            "{% static 'images/deluxe2.png' %}",
-            "{% static 'images/deluxe3.png' %}"
-        ],
-        desc: [
-            "Elegant room with modern design and enhanced comfort for a premium stay.",
-            "Enjoy a relaxing atmosphere with complete amenities perfect for leisure or business travelers."
-        ],
-        amenities: [
-            "Free WiFi",
-            "Air-conditioned",
-            "Basic toiletries",
-            "Complimentary bottled water",
-            "Extra towels",
-            "Daily housekeeping",
-            "Smart TV",
-            "Extra beds available",
-            "Kids-friendly space",
-            "City view",
-            "Mini bar"
-        ]
-    },
-
-    suite: {
-        name: "Suite Room",
-        price: 7000,
-        hero: "{% static 'images/suite.png' %}",
-        images: [
-            "{% static 'images/suite1.png' %}",
-            "{% static 'images/suite2.png' %}",
-            "{% static 'images/suite3.png' %}"
-        ],
-        desc: [
-            "Luxury suite with separate living area and premium hotel experience.",
-            "Perfect for guests who want space, elegance, and a complete high-end stay."
-        ],
-        amenities: [
-            "Free WiFi",
-            "Air-conditioned",
-            "Basic toiletries",
-            "Complimentary bottled water",
-            "Extra towels",
-            "Daily housekeeping",
-            "Smart TV",
-            "Extra beds available",
-            "Kids-friendly space",
-            "City view",
-            "Mini bar",
-            "Living room area",
-            "Coffee & tea set"
-        ]
-    },
-
-    superior: {
-        name: "Superior Room",
-        price: 8500,
-        hero: "{% static 'images/superior.png' %}",
-        images: [
-            "{% static 'images/superior.png' %}",
-            "{% static 'images/superior.png' %}",
-            "{% static 'images/superior.png' %}"
-        ],
-        desc: [
-            "Upgraded comfort with stylish interiors and a relaxing ambiance.",
-            "Ideal for guests looking for extra perks and premium relaxation."
-        ],
-        amenities: [
-            "Free WiFi",
-            "Air-conditioned",
-            "Basic toiletries",
-            "Complimentary bottled water",
-            "Extra towels",
-            "Daily housekeeping",
-            "Smart TV",
-            "Extra beds available",
-            "Kids-friendly space",
-            "City view",
-            "Mini bar",
-            "Living room area",
-            "Coffee & tea set",
-            "Complimentary breakfast",
-            "Pool access"
-        ]
-    },
-
-    executive: {
-        name: "Executive Room",
-        price: 10000,
-        hero: "{% static 'images/executive.png' %}",
-        images: [
-            "{% static 'images/executive.png' %}",
-            "{% static 'images/executive.png' %}",
-            "{% static 'images/executive.png' %}"
-        ],
-        desc: [
-            "Premium business-class room designed for productivity and comfort.",
-            "Includes work-friendly features and luxury services for professionals."
-        ],
-        amenities: [
-            "Free WiFi (high-speed)",
-            "Air-conditioned",
-            "Basic toiletries",
-            "Complimentary bottled water",
-            "Extra towels",
-            "Daily housekeeping",
-            "Smart TV",
-            "Extra beds available",
-            "Kids-friendly space",
-            "Living room area",
-            "Coffee & tea set",
-            "Complimentary breakfast",
-            "Pool access",
-            "Work desk setup",
-            "Meeting room access"
-        ]
-    },
-
-    seaview: {
-        name: "Sea View Suite",
-        price: 12500,
-        hero: "{% static 'images/sea.png' %}",
-        images: [
-            "{% static 'images/sea.png' %}",
-            "{% static 'images/sea.png' %}",
-            "{% static 'images/sea.png' %}"
-        ],
-        desc: [
-            "Relaxing suite with breathtaking ocean views and luxury comfort.",
-            "Enjoy peaceful surroundings with high-end features and scenic beauty."
-        ],
-        amenities: [
-            "Free WiFi (high-speed)",
-            "Air-conditioned",
-            "Premium toiletries",
-            "Complimentary bottled water",
-            "Extra towels",
-            "Daily housekeeping",
-            "Smart TV",
-            "Extra beds available",
-            "Kids-friendly space",
-            "Private balcony",
-            "Sunset deck access",
-            "Room service 24/7",
-            "Mini bar",
-            "Private jacuzzi",
-            "Work desk setup"
-        ]
-    },
-
-    penthouse: {
-        name: "Penthouse Room",
-        price: 20000,
-        hero: "{% static 'images/penthouse.png' %}",
-        images: [
-            "{% static 'images/penthouse.png' %}",
-            "{% static 'images/penthouse.png' %}",
-            "{% static 'images/penthouse.png' %}"
-        ],
-        desc: [
-            "The ultimate luxury stay with VIP service and panoramic views.",
-            "Experience top-tier comfort, exclusivity, and premium amenities."
-        ],
-        amenities: [
-            "Free WiFi (ultra high-speed)",
-            "Air-conditioned",
-            "Luxury toiletries",
-            "Complimentary bottled water",
-            "Extra towels",
-            "Personal concierge",
-            "VIP dining experience",
-            "Smart TV",
-            "Private jacuzzi",
-            "Helicopter transfer assistance",
-            "Daily housekeeping",
-            "Sunset deck access",
-            "Room service 24/7",
-            "Premium toiletries",
-            "Coffee & tea set",
-            "Living room area",
-            "Work desk setup",
-            "City view",
-            "Complimentary breakfast",
-            "Private balcony"
-        ]
-    }
-
-};
-
-// GET ROOM FROM URL
-const params = new URLSearchParams(window.location.search);
-const roomKey = params.get("room");
-document.getElementById("roomField").value = roomKey;
-
-// FALLBACK
-if (!rooms[roomKey]) {
-    window.location.href = "/rooms/";
-}
-
-// LOAD DATA
-const room = rooms[roomKey];
-
-// HERO
-document.querySelector(".hero").style.backgroundImage = `url('${room.hero}')`;
-
-// TITLE + TAGLINE
-document.getElementById("roomName").innerText = room.name;
-document.getElementById("roomTagline").innerText = "Luxury comfort awaits";
-
-// DESCRIPTION
-document.getElementById("desc1").innerText = room.desc[0];
-document.getElementById("desc2").innerText = room.desc[1];
-
-// PRICE
-document.getElementById("price").innerText = room.price;
-document.getElementById("datePicker").addEventListener("change", calculateTotal);
-document.getElementById("checkOutDate").addEventListener("change", calculateTotal);
-
-
-// GALLERY
-document.getElementById("gallery").innerHTML =
-    room.images.map(img => `<img src="${img}">`).join("");
-
-// AMENITIES
-document.getElementById("amenities").innerHTML =
-    room.amenities.map(a => `<li>${a}</li>`).join("");
-
-
-// DATE LOGIC
-const unavailableDates = [
-    "2026-04-25",
-    "2026-04-26",
-    "2026-05-01"
-];
-
-const dateInput = document.getElementById("datePicker");
-
-dateInput.addEventListener("input", function () {
-    if (unavailableDates.includes(this.value)) {
-        alert("This date is unavailable!");
-        this.value = "";
-    }
-});
-
-document.getElementById("summaryRoom").innerText = room.name;
-
-// date update
-dateInput.addEventListener("input", function () {
-    if (unavailableDates.includes(this.value)) {
-        alert("This date is unavailable!");
-        this.value = "";
-    } else {
-        document.getElementById("summaryDate").innerText = this.value;
-    }
-});
-
-const booking = document.getElementById("bookingCard");
-const rightColumn = document.querySelector(".right");
-const stopPoint = document.querySelector(".container");
-
-const offsetTop = booking.offsetTop;
-
-window.addEventListener("scroll", () => {
-    const scrollY = window.scrollY;
-
-    const containerBottom = stopPoint.offsetTop + stopPoint.offsetHeight;
-    const bookingHeight = booking.offsetHeight;
-
-    // start floating
-    if (scrollY > offsetTop && scrollY + bookingHeight < containerBottom) {
-        booking.classList.add("fixed");
-    } else {
-        booking.classList.remove("fixed");
-    }
-});
-
-// guests update
-const guestSelect = document.getElementById("guests");
-guestSelect.addEventListener("change", function () {
-    document.getElementById("summaryGuests").innerText = this.value;
-});
-
-// BOOK
-function bookNow(event) {
-    event.preventDefault();
-
-    fetch("/api/book-room/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            room: room.name,
-            full_name: document.getElementById("fullName").value,
-            contact_number: document.getElementById("contactNumber").value,
-            email: document.getElementById("emailAddress").value,
-            check_in_date: document.getElementById("datePicker").value,
-            check_out_date: document.getElementById("checkOutDate").value,
-            guests: document.getElementById("guests").value,
-            total_price: room.price * getNights()
-})
-
-
-
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("SERVER RESPONSE:", data); // 🔥 DEBUG
-
-        if (data.status === "success") {
-            alert("Booking Successful!");
-            window.location.href = "/rooms/";
-        } else {
-            alert("Booking failed: " + data.message);
-        }
-    })
-    .catch(error => {
-        console.error("FETCH ERROR:", error);
-        alert("Something went wrong.");
-    });
-}
 
 function getNights() {
     const start = new Date(document.getElementById("datePicker").value);
@@ -545,26 +171,57 @@ function getNights() {
 }
 
 function calculateTotal() {
-    const checkIn = document.getElementById("datePicker").value;
-    const checkOut = document.getElementById("checkOutDate").value;
+    const price = parseFloat("{{ room.price }}");
 
-    if (!checkIn || !checkOut) return;
+    const nights = getNights();
 
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
-
-    const diffTime = end - start;
-    const days = diffTime / (1000 * 60 * 60 * 24);
-
-    if (days <= 0) {
-        document.getElementById("totalPrice").innerText = "Invalid dates";
+    if (!nights) {
+        document.getElementById("totalPrice").innerText = "₱0";
         return;
     }
 
-    const total = room.price * days;
+    const total = price * nights;
 
     document.getElementById("totalPrice").innerText =
-        "₱" + total.toLocaleString() + " (" + days + " nights)";
+        "₱" + total.toLocaleString() + " (" + nights + " nights)";
+}
+
+document.getElementById("datePicker").addEventListener("change", calculateTotal);
+document.getElementById("checkOutDate").addEventListener("change", calculateTotal);
+
+// BOOKING FUNCTION (API)
+function bookNow(event) {
+    event.preventDefault();
+
+    fetch("/api/book-room/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            room: document.getElementById("roomField").value,
+            full_name: document.getElementById("fullName").value,
+            contact_number: document.getElementById("contactNumber").value,
+            email: document.getElementById("emailAddress").value,
+            check_in_date: document.getElementById("datePicker").value,
+            check_out_date: document.getElementById("checkOutDate").value,
+            guests: document.getElementById("guests").value,
+            total_price: calculateTotal()
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert("Booking Successful!");
+            window.location.href = "/rooms/";
+        } else {
+            alert("Booking failed: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Something went wrong.");
+    });
 }
 
 </script>

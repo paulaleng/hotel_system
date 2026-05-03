@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 # ROOM TABLE
 # =========================
 class Room(models.Model):
+
     ROOM_TYPES = [
         ('Standard', 'Standard'),
         ('Deluxe', 'Deluxe'),
@@ -12,19 +13,34 @@ class Room(models.Model):
         ('Executive', 'Executive'),
     ]
 
-    room_number = models.CharField(max_length=10, unique=True)
     room_type = models.CharField(max_length=20, choices=ROOM_TYPES)
 
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     image = models.ImageField(upload_to='rooms/', null=True, blank=True)
+    max_guests = models.IntegerField(default=1)
+    amenities = models.TextField(blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
 
     is_available = models.BooleanField(default=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)   # NEW
-    updated_at = models.DateTimeField(auto_now=True)       # NEW
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Room {self.room_number} ({self.room_type})"
+        return f"{self.room_type}"
+
+
+# =========================
+# ROOM GALLERY (NEW)
+# =========================
+class RoomImage(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='gallery')
+    image = models.ImageField(upload_to='rooms/gallery/')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.room.room_number} - Gallery Image"
 
 
 # =========================
@@ -85,6 +101,7 @@ class Booking(models.Model):
         ('penthouse', 'Penthouse Room'),
     ]
 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     room = models.CharField(max_length=50)
     full_name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)

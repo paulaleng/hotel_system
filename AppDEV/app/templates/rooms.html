@@ -8,7 +8,6 @@
 
     <link rel="stylesheet" href="{% static 'components/navbar.css' %}">
     <link rel="stylesheet" href="{% static 'styles/room.css' %}">
-    
 </head>
 
 <body>
@@ -36,23 +35,12 @@ function getQueryParam(param) {
 }
 </script>
 
-<!-- NAVIGATION WITH BACKEND DATA -->
 <script>
-function goToDetails(roomType) {
-    if (!roomType) return;
-
-    let checkin = getQueryParam("checkin");
-    let checkout = getQueryParam("checkout");
-
-    let url = "{% url 'room_details' %}?room=" + roomType;
-
-    if (checkin && checkout) {
-        url += "&checkin=" + checkin + "&checkout=" + checkout;
-    }
-
-    window.location.href = url;
+function goToDetails(room) {
+    window.location.href = "/details/?room=" + room;
 }
 </script>
+
 
 <div class="title">
     <h1>Choose your stay</h1>
@@ -63,279 +51,53 @@ function goToDetails(roomType) {
     <input type="text" id="roomSearch" placeholder="Search room type..." onkeyup="searchRooms()">
 </div>
 
+<!-- =========================
+     ROOM LIST (DB SYNCED)
+========================= -->
 <div class="room-list">
 
-    <!-- SINGLE ROOM -->
+    {% for room in rooms %}
+
     <div class="room-card">
+
+        <!-- IMAGE -->
         <div class="room-img">
-            <img src="{% static 'images/single.png' %}">
+            {% if room.image %}
+                <img src="{{ room.image.url }}">
+            {% else %}
+                <img src="{% static 'images/default.png' %}">
+            {% endif %}
         </div>
+
+        <!-- INFO -->
         <div class="room-info">
-            <h2>Single Room</h2>
-            <p>Perfect for solo travelers who want a simple, peaceful, and budget-friendly stay.</p>
+            <h2>{{ room.room_type }}</h2>
+            <p>{{ room.details }}</p>
+
+            {% if room.amenities %}
             <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
+               {% for item in room.amenities_list %}
+                    <li>{{ item }}</li>
+                {% endfor %}
             </ul>
+            {% endif %}
         </div>
+
+        <!-- PRICE -->
         <div class="room-price">
-            <h3>₱2,000 / night</h3>
-            <button onclick="goToDetails('single')">Select</button>
+            <h3>₱{{ room.price }} / night</h3>
+
+         <button onclick="goToDetails('{{ room.room_type|lower|slugify }}')">
+            Select
+        </button>
         </div>
+
     </div>
 
-    <!-- TWIN ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/twin.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Twin Room</h2>
-            <p>Comfortable room with two single beds, ideal for friends or colleagues.</p>
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱3,200 / night</h3>
-            <button onclick="goToDetails('twin')">Select</button>
-        </div>
-    </div>
+    {% empty %}
+        <p style="text-align:center; width:100%;">No rooms available.</p>
+    {% endfor %}
 
-    <!-- STANDARD ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/standard.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Standard Room</h2>
-            <p>Cozy and comfortable room with essential amenities for a relaxing stay.</p>
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱3,900 / night</h3>
-            <button onclick="goToDetails('standard')">Select</button>
-        </div>
-    </div>
-
-    <!-- FAMILY ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/family.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Family Room</h2>
-            <p>Spacious room designed for families with extra comfort and space.</p>
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱5,000 / night</h3>
-            <button onclick="goToDetails('family')">Select</button>
-        </div>
-    </div>
-
-    <!-- DELUXE ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/deluxe.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Deluxe Room</h2>
-            <p>Elegant room with modern design and enhanced comfort for a premium stay.</p>
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>City view</li>
-                <li>Mini bar</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱5,500 / night</h3>
-            <button onclick="goToDetails('deluxe')">Select</button>
-        </div>
-    </div>
-
-    <!-- SUITE ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/suite.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Suite Room</h2>
-            <p>Luxury suite with separate living area and premium hotel experience.</p>
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>City view</li>
-                <li>Mini bar</li>
-                <li>Living room area</li>
-                <li>Coffee & tea set</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱7,000 / night</h3>
-            <button onclick="goToDetails('suite')">Select</button>
-        </div>
-    </div>
-
-    <!-- SUPERIOR ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/superior.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Superior Room</h2>
-            <p>Upgraded comfort with stylish interiors and relaxing atmosphere.</p>
-            <ul class="freebies">
-                <li>Free WiFi</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>City view</li>
-                <li>Mini bar</li>
-                <li>Living room area</li>
-                <li>Coffee & tea set</li>
-                <li>Complimentary breakfast</li>
-                <li>Pool access</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱8,500 / night</h3>
-            <button onclick="goToDetails('superior')">Select</button>
-        </div>
-    </div>
-
-    <!-- EXECUTIVE ROOM -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/executive.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Executive Room</h2>
-            <p>Premium business-class room designed for productivity and comfort.</p>
-            <ul class="freebies">
-                <li>Free WiFi (high-speed)</li>
-                <li>Air-conditioned</li>
-                <li>Basic toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>Living room area</li>
-                <li>Coffee & tea set</li>
-                <li>Complimentary breakfast</li>
-                <li>Pool access</li>
-                <li>Work desk setup</li>
-                <li>Meeting room access</li>
-                <li>Mini bar</li>
-                <li>Premium toiletries</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱10,000 / night</h3>
-            <button onclick="goToDetails('executive')">Select</button>
-        </div>
-    </div>
-
-    <!-- SEA VIEW -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/sea.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Sea View Suite</h2>
-            <p>Relaxing suite with breathtaking ocean view and luxury comfort experience.</p>
-            <ul class="freebies">
-                <li>Free WiFi (high-speed)</li>
-                <li>Air-conditioned</li>
-                <li>Premium toiletries</li>
-                <li>Complimentary bottled water</li>
-                <li>Extra towels</li>
-                <li>Daily housekeeping</li>
-                <li>Smart TV</li>
-                <li>Extra beds available</li>
-                <li>Kids-friendly space</li>
-                <li>Private balcony</li>
-                <li>Sunset deck access</li>
-                <li>Room service 24/7</li>
-                <li>Mini bar</li>
-                <li>Private jacuzzi</li>
-                <li>Work desk setup</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱12,500 / night</h3>
-            <button onclick="goToDetails('seaview')">Select</button>
-        </div>
-    </div>
-
-    <!-- PENTHOUSE -->
-    <div class="room-card">
-        <div class="room-img">
-            <img src="{% static 'images/penthouse.png' %}">
-        </div>
-        <div class="room-info">
-            <h2>Penthouse Room</h2>
-            <p>The ultimate luxury stay with VIP service and panoramic views.</p>
-            <ul class="freebies">
-                <li>Free WiFi (ultra high-speed)</li>
-                <li>Air-conditioned</li>
-                <li>Luxury toiletries</li>
-                <li>Personal concierge</li>
-                <li>VIP dining experience</li>
-                <li>Private jacuzzi</li>
-                <li>Room service 24/7</li>
-            </ul>
-        </div>
-        <div class="room-price">
-            <h3>₱20,000 / night</h3>
-            <button onclick="goToDetails('penthouse')">Select</button>
-        </div>
-    </div>
 
 </div>
 
