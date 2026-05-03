@@ -1,7 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ImageBackground, TouchableOpacity } from 'react-native';
+import { useNavigation } from "@react-navigation/native";
 
-export default function Landing({ switchScreen }) {
+
+export default function Landing() {
+  const navigation = useNavigation();
+  
   return (
     <View style={styles.container}>
       <ImageBackground 
@@ -21,7 +25,7 @@ export default function Landing({ switchScreen }) {
 
           <TouchableOpacity 
           style={styles.button}
-          onPress={() => switchScreen('login')}
+          onPress={() => navigation.navigate("Login")}
           >
             <Text style={styles.buttonText}>Get Started</Text>
             </TouchableOpacity>

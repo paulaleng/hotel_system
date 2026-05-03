@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 import Rooms from './room';
+import { useNavigation } from "@react-navigation/native";
 
-export default function Login({ switchScreen }) {
+export default function Login() {
+  const navigation = useNavigation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -46,12 +48,12 @@ export default function Login({ switchScreen }) {
           </View>
 
           {/* BUTTON */}
-          <TouchableOpacity style={styles.button} onPress={() => switchScreen('Rooms')}>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Rooms")}>
             <Text style={styles.buttonText}>LOGIN</Text>
           </TouchableOpacity>
 
           {/* LINK */}
-          <TouchableOpacity onPress={() => switchScreen('register')}>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
             <Text style={styles.link}>
               Don't have an account?{' '}
               <Text style={styles.linkClick}>Register</Text>

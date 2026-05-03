@@ -8,8 +8,11 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from "@react-navigation/native";
 
 export default function RoomDetails() {
+
+  const navigation = useNavigation();
   return (
     <ScrollView style={styles.container}>
 

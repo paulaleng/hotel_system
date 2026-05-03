@@ -1,34 +1,28 @@
-import { useState } from 'react';
-import Landing from './components/landing';
-import Login from './components/Login';
-import Register from './components/Register';
-import Rooms from './components/room';
-import RoomDetails from './components/details';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Landing from "./components/landing";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Rooms from "./components/room";
+import RoomDetails from "./components/details";
+import ProfileScreen from "./components/profile";
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [screen, setScreen] = useState('landing');
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Landing" screenOptions={{ headerShown: false }}>
 
-  const switchScreen = (screenName) => {
-    setScreen(screenName);
-  };
+        <Stack.Screen name="Landing" component={Landing} />
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Register" component={Register} />
+        <Stack.Screen name="Rooms" component={Rooms} />
+        <Stack.Screen name="RoomDetails" component={RoomDetails} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
 
-  if (screen === 'landing') {
-    return <Landing switchScreen={switchScreen} />;
-  }
-
-  if (screen === 'login') {
-    return <Login switchScreen={switchScreen} />;
-  }
-
-  if (screen === 'register') {
-    return <Register switchScreen={switchScreen} />;
-  }
-
-   if (screen === 'Rooms') {
-    return <Rooms switchScreen={switchScreen} />;
-  }
-
-  if (screen === 'RoomDetails') {
-    return <RoomDetails switchScreen={switchScreen} />;
-  }
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }

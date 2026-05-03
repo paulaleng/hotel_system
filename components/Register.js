@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
+import { useNavigation } from "@react-navigation/native";
 
-export default function Register({ switchScreen }) {
+export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const navigation = useNavigation();
 
   const register = () => {
     if (!username || !email || !password || !confirmPassword) {
@@ -19,7 +21,7 @@ export default function Register({ switchScreen }) {
     }
 
     alert("Account created successfully!");
-    switchScreen('login');
+    navigation.navigate("login")
   };
 
   return (
@@ -89,12 +91,12 @@ export default function Register({ switchScreen }) {
           </View>
 
           {/* BUTTON */}
-          <TouchableOpacity style={styles.button} onPress={register}>
+          <TouchableOpacity style={styles.button} onPress={Register}>
             <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
           </TouchableOpacity>
 
           {/* LINK */}
-          <TouchableOpacity onPress={() => switchScreen('login')}>
+          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
             <Text style={styles.link}>
               Already have an account?{' '}
               <Text style={styles.linkClick}>Login</Text>

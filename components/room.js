@@ -10,6 +10,8 @@ import {
   ScrollView,
 } from 'react-native';
 import RoomDetails from './details';
+import Navbar from "./navbar";
+import { useNavigation } from "@react-navigation/native";
 
 const roomsData = [
   {
@@ -84,8 +86,9 @@ const roomsData = [
   },
 ];
 
-export default function Rooms({ switchScreen }) {
+export default function Rooms() {
   const [search, setSearch] = useState('');
+  const navigation = useNavigation();
 
   const filteredRooms = roomsData.filter(room =>
     room.name.toLowerCase().includes(search.toLowerCase())
@@ -93,6 +96,7 @@ export default function Rooms({ switchScreen }) {
 
   return (
     <View style={styles.container}>
+      <Navbar />
 
       {/* TITLE */}
       <Text style={styles.title}>Choose your stay</Text>
@@ -128,7 +132,7 @@ export default function Rooms({ switchScreen }) {
             <View style={styles.priceBox}>
               <Text style={styles.price}>{item.price}</Text>
 
-              <TouchableOpacity style={styles.button} onPress={() => switchScreen('RoomDetails')}>
+              <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("RoomDetails")}>
                 <Text style={styles.buttonText}>Select</Text>
               </TouchableOpacity>
             </View>
