@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,92 +7,103 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-import RoomDetails from './details';
 import Navbar from "./navbar";
 import { useNavigation } from "@react-navigation/native";
 
-const roomsData = [
-  {
-    id: '1',
-    name: 'Single Room',
-    price: '₱2,000 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Perfect for solo travelers who want a simple, peaceful, and budget-friendly stay.',
-  },
-  {
-    id: '2',
-    name: 'Twin Room',
-    price: '₱3,200 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Comfortable room with two single beds, ideal for friends or colleagues.',
-  },
-  {
-    id: '3',
-    name: 'Standard Room',
-    price: '₱3,900 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Cozy and comfortable room with essential amenities for a relaxing stay.',
-  },
-  {
-    id: '4',
-    name: 'Family Room',
-    price: '₱5,000 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Spacious room designed for families with extra comfort and space.',
-  },
-  {
-    id: '5',
-    name: 'Deluxe Room',
-    price: '₱5,500 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Elegant room with modern design and enhanced comfort.',
-  },
-  {
-    id: '6',
-    name: 'Suite Room',
-    price: '₱7,000 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Luxury suite with separate living area.',
-  },
-  {
-    id: '7',
-    name: 'Superior Room',
-    price: '₱8,500 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Upgraded comfort with stylish interiors.',
-  },
-  {
-    id: '8',
-    name: 'Executive Room',
-    price: '₱10,000 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Premium business-class room for productivity and comfort.',
-  },
-  {
-    id: '9',
-    name: 'Sea View Suite',
-    price: '₱12,500 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Relaxing suite with ocean view.',
-  },
-  {
-    id: '10',
-    name: 'Penthouse',
-    price: '₱20,000 / night',
-    image: require('../assets/single.jpg'),
-    desc: 'Ultimate luxury VIP experience.',
-  },
-];
+// =========================
+// ✅ CHANGE THIS TO YOUR IP
+// =========================
+const APP_URL = 'http://192.168.1.33:8000';
 
 export default function Rooms() {
   const [search, setSearch] = useState('');
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+
   const navigation = useNavigation();
 
-  const filteredRooms = roomsData.filter(room =>
-    room.name.toLowerCase().includes(search.toLowerCase())
+  // =========================
+  // FETCH ROOMS FROM API
+  // =========================
+  const fetchRooms = async () => {
+    try {
+      setError(null);
+      const response = await fetch(`${APP_URL}/api/rooms/`);
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        setRooms(data.rooms);
+      } else {
+        setError('Failed to load rooms.');
+      }
+    } catch (err) {
+      setError('Cannot connect to server. Check your network.');
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // =========================
+  // LOAD ON MOUNT
+  // =========================
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  // =========================
+  // PULL TO REFRESH
+  // =========================
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchRooms();
+  };
+
+  // =========================
+  // SEARCH FILTER
+  // =========================
+  const filteredRooms = rooms.filter(room =>
+    room.room_type.toLowerCase().includes(search.toLowerCase())
   );
+
+  // =========================
+  // FORMAT PRICE
+  // =========================
+  const formatPrice = (price) => {
+    return `₱${parseFloat(price).toLocaleString('en-PH')} / night`;
+  };
+
+  // =========================
+  // LOADING STATE
+  // =========================
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#c8a96a" />
+        <Text style={styles.loadingText}>Loading rooms...</Text>
+      </View>
+    );
+  }
+
+  // =========================
+  // ERROR STATE
+  // =========================
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchRooms}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -111,29 +122,82 @@ export default function Rooms() {
         onChangeText={setSearch}
       />
 
-      {/* LIST */}
+      {/* EMPTY STATE */}
+      {filteredRooms.length === 0 && (
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>No rooms found.</Text>
+        </View>
+      )}
+
+      {/* ROOM LIST */}
       <FlatList
         data={filteredRooms}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{ paddingBottom: 20 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#c8a96a']}
+          />
+        }
         renderItem={({ item }) => (
           <View style={styles.card}>
 
             {/* IMAGE */}
-            <Image source={item.image} style={styles.image} />
+            {item.image ? (
+              <Image
+                source={{ uri: `${APP_URL}${item.image}` }}
+                style={styles.image}
+              />
+            ) : (
+              <View style={[styles.image, styles.noImage]}>
+                <Text style={styles.noImageText}>No Image</Text>
+              </View>
+            )}
 
             {/* INFO */}
             <View style={styles.info}>
-              <Text style={styles.roomName}>{item.name}</Text>
-              <Text style={styles.desc}>{item.desc}</Text>
+              <View style={styles.badgeRow}>
+                <Text style={styles.roomName}>{item.room_type}</Text>
+                <View style={[
+                  styles.badge,
+                  { backgroundColor: item.is_available ? '#e6f4ea' : '#fdecea' }
+                ]}>
+                  <Text style={[
+                    styles.badgeText,
+                    { color: item.is_available ? '#2e7d32' : '#c62828' }
+                  ]}>
+                    {item.is_available ? 'Available' : 'Unavailable'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.desc}>
+                {item.details || 'No description available.'}
+              </Text>
+
+              {item.amenities ? (
+                <Text style={styles.amenities}>✦ {item.amenities}</Text>
+              ) : null}
+
+              <Text style={styles.guests}>👤 Max guests: {item.max_guests}</Text>
             </View>
 
             {/* PRICE + BUTTON */}
             <View style={styles.priceBox}>
-              <Text style={styles.price}>{item.price}</Text>
-
-              <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("RoomDetails")}>
-                <Text style={styles.buttonText}>Select</Text>
+              <Text style={styles.price}>{formatPrice(item.price)}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  !item.is_available && styles.buttonDisabled
+                ]}
+                disabled={!item.is_available}
+                onPress={() => navigation.navigate("RoomDetails", { room: item })}
+              >
+                <Text style={styles.buttonText}>
+                  {item.is_available ? 'Select' : 'Unavailable'}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -149,6 +213,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f6f7fb',
     padding: 15,
+  },
+
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+
+  loadingText: {
+    marginTop: 10,
+    color: '#888',
+    fontSize: 14,
+  },
+
+  errorText: {
+    color: '#c62828',
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+
+  emptyText: {
+    color: '#888',
+    fontSize: 15,
+    textAlign: 'center',
+  },
+
+  retryButton: {
+    backgroundColor: '#c8a96a',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+  },
+
+  retryText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   title: {
@@ -182,12 +284,41 @@ const styles = StyleSheet.create({
     height: 160,
   },
 
+  noImage: {
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  noImageText: {
+    color: '#aaa',
+    fontSize: 14,
+  },
+
   info: {
     padding: 12,
   },
 
+  badgeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+
   roomName: {
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+
+  badgeText: {
+    fontSize: 11,
     fontWeight: 'bold',
   },
 
@@ -197,11 +328,26 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
+  amenities: {
+    fontSize: 11,
+    color: '#c8a96a',
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
+
+  guests: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 4,
+  },
+
   priceBox: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
 
   price: {
@@ -215,6 +361,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
+  },
+
+  buttonDisabled: {
+    backgroundColor: '#ccc',
   },
 
   buttonText: {

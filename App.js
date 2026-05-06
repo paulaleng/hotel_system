@@ -7,6 +7,7 @@ import Register from "./components/Register";
 import Rooms from "./components/room";
 import RoomDetails from "./components/details";
 import ProfileScreen from "./components/profile";
+import ScheduleScreen from "./components/schedule";
 
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +22,7 @@ export default function App() {
         <Stack.Screen name="Rooms" component={Rooms} />
         <Stack.Screen name="RoomDetails" component={RoomDetails} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Schedule" component={ScheduleScreen} />
 
       </Stack.Navigator>
     </NavigationContainer>

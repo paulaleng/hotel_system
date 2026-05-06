@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-2bcfp$e4z@xn#6@mx6z$go6!+%rvl)_oqlg!n073=f#xbsc37@'
 
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # =========================
@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'base',
+    'app',
     'rest_framework',
     'corsheaders',
 ]
