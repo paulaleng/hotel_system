@@ -193,7 +193,7 @@ export default function Rooms() {
                   !item.is_available && styles.buttonDisabled
                 ]}
                 disabled={!item.is_available}
-                onPress={() => navigation.navigate("RoomDetails", { room: item })}
+                onPress={() => navigation.navigate("RoomDetails", { roomId: item.id })}
               >
                 <Text style={styles.buttonText}>
                   {item.is_available ? 'Select' : 'Unavailable'}

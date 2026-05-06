@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,66 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+
+const APP_URL = 'http://192.168.1.33:8000';
 
 export default function RoomDetails() {
-
   const navigation = useNavigation();
+  const route = useRoute();
+
+  const { roomId } = route.params;
+
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // =========================
+  // FETCH SINGLE ROOM
+  // =========================
+  const fetchRoom = async () => {
+    try {
+      const res = await fetch(`${APP_URL}/api/rooms/${roomId}/`);
+      const data = await res.json();
+
+      if (data.status === "success") {
+        setRoom(data.room);
+      }
+    } catch (err) {
+      console.log("Room details error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoom();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#c8a96a" />
+        <Text>Loading room...</Text>
+      </View>
+    );
+  }
+
+  if (!room) {
+    return (
+      <View style={styles.centered}>
+        <Text>Room not found</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
 
       {/* HERO */}
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Room</Text>
+        <Text style={styles.heroTitle}>{room.room_type}</Text>
         <Text style={styles.heroSubtitle}>Comfort and elegance</Text>
       </View>
 
@@ -31,29 +79,30 @@ export default function RoomDetails() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Description</Text>
             <Text style={styles.text}>
-              Perfect for solo travelers who want a simple and peaceful stay.
-            </Text>
-            <Text style={styles.text}>
-              A budget-friendly room with essential comfort.
+              {room.details || "No description available."}
             </Text>
           </View>
 
           {/* GALLERY */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Room Gallery</Text>
+
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <Image source={require('../assets/single.jpg')} style={styles.galleryImg} />
-              <Image source={require('../assets/single.jpg')} style={styles.galleryImg} />
-              <Image source={require('../assets/single.jpg')} style={styles.galleryImg} />
+              <Image
+                source={
+                  room.image
+                    ? { uri: `${APP_URL}${room.image}` }
+                    : require('../assets/single.jpg')
+                }
+                style={styles.galleryImg}
+              />
             </ScrollView>
           </View>
 
           {/* AMENITIES */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Amenities</Text>
-            <Text style={styles.amenity}>• Free WiFi</Text>
-            <Text style={styles.amenity}>• Air-conditioned</Text>
-            <Text style={styles.amenity}>• Basic toiletries</Text>
+            <Text style={styles.amenity}>• {room.amenities || "N/A"}</Text>
           </View>
 
         </View>
@@ -62,16 +111,15 @@ export default function RoomDetails() {
         <View style={styles.booking}>
 
           {/* PRICE */}
-          <Text style={styles.price}>₱2,000</Text>
+          <Text style={styles.price}>₱{room.price}</Text>
           <Text style={styles.priceNote}>per night • taxes included</Text>
 
-          {/* FORM */}
+          {/* FORM (UNCHANGED UI) */}
           <TextInput placeholder="Check-in Date" style={styles.input} />
           <TextInput placeholder="Check-out Date" style={styles.input} />
           <TextInput placeholder="Full Name" style={styles.input} />
           <TextInput placeholder="Contact Number" style={styles.input} />
           <TextInput placeholder="Email Address" style={styles.input} />
-
           <TextInput placeholder="Guests (1-4)" style={styles.input} />
 
           {/* BENEFITS */}

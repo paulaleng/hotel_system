@@ -134,7 +134,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 # MEDIA FILES (IMPORTANT FOR ROOM IMAGES)
 # =========================
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / 'appDEV' / 'media'
 
 
 # =========================
