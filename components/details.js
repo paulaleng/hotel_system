@@ -8,12 +8,18 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  Platform,
 } from 'react-native';
+
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 const APP_URL = 'http://192.168.1.33:8000';
 
 export default function RoomDetails() {
+
   const navigation = useNavigation();
   const route = useRoute();
 
@@ -23,7 +29,23 @@ export default function RoomDetails() {
   const [loading, setLoading] = useState(true);
 
   // =========================
-  // FETCH SINGLE ROOM
+  // FORM STATES
+  // =========================
+  const [checkIn, setCheckIn] = useState(new Date());
+  const [checkOut, setCheckOut] = useState(new Date());
+
+  const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showCheckOut, setShowCheckOut] = useState(false);
+
+  const [fullName, setFullName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [guests, setGuests] = useState('1');
+
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  // =========================
+  // FETCH ROOM
   // =========================
   const fetchRoom = async () => {
     try {
@@ -33,8 +55,10 @@ export default function RoomDetails() {
       if (data.status === "success") {
         setRoom(data.room);
       }
+
     } catch (err) {
       console.log("Room details error:", err);
+
     } finally {
       setLoading(false);
     }
@@ -43,6 +67,96 @@ export default function RoomDetails() {
   useEffect(() => {
     fetchRoom();
   }, []);
+
+  // =========================
+  // FORMAT DATE
+  // =========================
+  const formatDate = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  // =========================
+  // TOTAL PRICE
+  // =========================
+  const calculateDays = () => {
+    const diff =
+      (new Date(checkOut) - new Date(checkIn)) /
+      (1000 * 60 * 60 * 24);
+
+    return diff > 0 ? diff : 1;
+  };
+
+  const totalPrice = room
+    ? calculateDays() * parseFloat(room.price)
+    : 0;
+
+  // =========================
+  // BOOK ROOM
+  // =========================
+  const handleBooking = async () => {
+
+    if (
+      !fullName ||
+      !contactNumber ||
+      !email ||
+      !guests
+    ) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    try {
+
+      setBookingLoading(true);
+
+      const response = await fetch(`${APP_URL}/api/book-room/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+          room: room.room_type,
+          full_name: fullName,
+          contact_number: contactNumber,
+          email: email,
+          check_in_date: formatDate(checkIn),
+          check_out_date: formatDate(checkOut),
+          guests: guests,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+
+        Alert.alert(
+          "Success",
+          "Booking saved successfully!"
+        );
+
+        setFullName('');
+        setContactNumber('');
+        setEmail('');
+        setGuests('1');
+
+      } else {
+        Alert.alert("Error", data.message);
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+      Alert.alert(
+        "Error",
+        "Something went wrong"
+      );
+
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -72,12 +186,13 @@ export default function RoomDetails() {
 
       <View style={styles.content}>
 
-        {/* LEFT SECTION */}
+        {/* LEFT */}
         <View style={styles.left}>
 
           {/* DESCRIPTION */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Description</Text>
+
             <Text style={styles.text}>
               {room.details || "No description available."}
             </Text>
@@ -87,7 +202,11 @@ export default function RoomDetails() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Room Gallery</Text>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+
               <Image
                 source={
                   room.image
@@ -96,31 +215,119 @@ export default function RoomDetails() {
                 }
                 style={styles.galleryImg}
               />
+
             </ScrollView>
           </View>
 
           {/* AMENITIES */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Amenities</Text>
-            <Text style={styles.amenity}>• {room.amenities || "N/A"}</Text>
+
+            <Text style={styles.amenity}>
+              • {room.amenities || "N/A"}
+            </Text>
           </View>
 
         </View>
 
-        {/* RIGHT / BOOKING */}
+        {/* BOOKING */}
         <View style={styles.booking}>
 
-          {/* PRICE */}
-          <Text style={styles.price}>₱{room.price}</Text>
-          <Text style={styles.priceNote}>per night • taxes included</Text>
+          <Text style={styles.price}>
+            ₱{room.price}
+          </Text>
 
-          {/* FORM (UNCHANGED UI) */}
-          <TextInput placeholder="Check-in Date" style={styles.input} />
-          <TextInput placeholder="Check-out Date" style={styles.input} />
-          <TextInput placeholder="Full Name" style={styles.input} />
-          <TextInput placeholder="Contact Number" style={styles.input} />
-          <TextInput placeholder="Email Address" style={styles.input} />
-          <TextInput placeholder="Guests (1-4)" style={styles.input} />
+          <Text style={styles.priceNote}>
+            per night • taxes included
+          </Text>
+
+          {/* CHECK IN */}
+          <TouchableOpacity
+            onPress={() => setShowCheckIn(true)}
+          >
+            <TextInput
+              value={formatDate(checkIn)}
+              placeholder="Check-in Date"
+              style={styles.input}
+              editable={false}
+            />
+          </TouchableOpacity>
+
+          {showCheckIn && (
+            <DateTimePicker
+              value={checkIn}
+              mode="date"
+              display="default"
+              minimumDate={new Date()}
+              onChange={(event, selectedDate) => {
+                setShowCheckIn(Platform.OS === 'ios');
+
+                if (selectedDate) {
+                  setCheckIn(selectedDate);
+                }
+              }}
+            />
+          )}
+
+          {/* CHECK OUT */}
+          <TouchableOpacity
+            onPress={() => setShowCheckOut(true)}
+          >
+            <TextInput
+              value={formatDate(checkOut)}
+              placeholder="Check-out Date"
+              style={styles.input}
+              editable={false}
+            />
+          </TouchableOpacity>
+
+          {showCheckOut && (
+            <DateTimePicker
+              value={checkOut}
+              mode="date"
+              display="default"
+              minimumDate={checkIn}
+              onChange={(event, selectedDate) => {
+                setShowCheckOut(Platform.OS === 'ios');
+
+                if (selectedDate) {
+                  setCheckOut(selectedDate);
+                }
+              }}
+            />
+          )}
+
+          {/* FORM */}
+          <TextInput
+            placeholder="Full Name"
+            style={styles.input}
+            value={fullName}
+            onChangeText={setFullName}
+          />
+
+          <TextInput
+            placeholder="Contact Number"
+            style={styles.input}
+            keyboardType="phone-pad"
+            value={contactNumber}
+            onChangeText={setContactNumber}
+          />
+
+          <TextInput
+            placeholder="Email Address"
+            style={styles.input}
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+
+          <TextInput
+            placeholder="Guests (1-4)"
+            style={styles.input}
+            keyboardType="numeric"
+            value={guests}
+            onChangeText={setGuests}
+          />
 
           {/* BENEFITS */}
           <View style={styles.benefits}>
@@ -135,11 +342,27 @@ export default function RoomDetails() {
           </Text>
 
           {/* TOTAL */}
-          <Text style={styles.total}>Total: ₱0</Text>
+          <Text style={styles.total}>
+            Total: ₱{totalPrice.toLocaleString()}
+          </Text>
 
           {/* BUTTON */}
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Book Now</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleBooking}
+            disabled={bookingLoading}
+          >
+
+            {
+              bookingLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  Book Now
+                </Text>
+              )
+            }
+
           </TouchableOpacity>
 
         </View>
@@ -150,14 +373,21 @@ export default function RoomDetails() {
 }
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#f5f6fa',
   },
 
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   hero: {
     height: 180,
-    backgroundColor: '#333',
+    backgroundColor: '#c8a96a',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -262,4 +492,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+
 });
