@@ -5,9 +5,15 @@
 <title>Room Details | Grand Solace Hotel</title>
 
 {% load static %}
+{% load humanize %}
 
 <link rel="stylesheet" href="{% static 'styles/navbar.css' %}">
 <link rel="stylesheet" href="{% static 'styles/details.css' %}">
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 </head>
 
@@ -19,10 +25,15 @@
 
 <!-- HERO -->
 <div class="hero" style="background-image: url('{{ room.image.url }}');">
+
     <div class="hero-content">
+
         <h1>{{ room.room_type }}</h1>
+
         <p>Luxury comfort awaits</p>
+
     </div>
+
 </div>
 
 <div class="container">
@@ -32,34 +43,53 @@
 
         <!-- DESCRIPTION -->
         <div class="card">
+
             <h2>Description</h2>
+
             <p>{{ room.details }}</p>
+
         </div>
 
         <!-- GALLERY -->
         <div class="card">
+
             <h2>Room Gallery</h2>
+
             <div class="gallery">
 
-                {% if room.roomimage_set.all %}
-                    {% for img in room.roomimage_set.all %}
+                {% if room.gallery.all %}
+
+                    {% for img in room.gallery.all %}
+
                         <img src="{{ img.image.url }}">
+
                     {% endfor %}
+
                 {% else %}
+
                     <img src="{{ room.image.url }}">
+
                 {% endif %}
 
             </div>
+
         </div>
 
         <!-- AMENITIES -->
         <div class="card">
+
             <h2>Amenities</h2>
+
             <ul class="amenities">
+
                 {% for item in room.amenities_list %}
+
                     <li>{{ item }}</li>
+
                 {% endfor %}
+
             </ul>
+
         </div>
 
     </div>
@@ -72,70 +102,113 @@
             <form id="bookingForm" onsubmit="bookNow(event)">
 
                 <!-- HIDDEN ROOM FIELD -->
-                <input type="hidden" name="room" id="roomField" value="{{ room.room_type }}">
+                <input type="hidden"
+                       name="room"
+                       id="roomField"
+                       value="{{ room.room_type }}">
 
                 <!-- PRICE -->
                 <div class="price-block">
-                    <div class="price">₱{{ room.price }}</div>
-                    <p class="price-note">per night • taxes included</p>
+
+                    <div class="price">
+
+                        ₱{{ room.price|intcomma }}
+
+                    </div>
+
+                    <p class="price-note">
+                        per night • taxes included
+                    </p>
+
                 </div>
 
                 <div class="divider"></div>
 
                 <!-- CHECK IN -->
                 <div class="field">
+
                     <label>Check-in Date</label>
-                    <input type="date" id="datePicker" required>
+
+                    <input type="text" id="datePicker" required>
+
                 </div>
 
                 <!-- CHECK OUT -->
                 <div class="field">
+
                     <label>Check-out Date</label>
-                    <input type="date" id="checkOutDate" required>
+
+                    <input type="text" id="checkOutDate" required>
+
                 </div>
 
                 <!-- NAME -->
                 <div class="field">
+
                     <label>Full Name</label>
+
                     <input type="text" id="fullName" required>
+
                 </div>
 
                 <!-- CONTACT -->
                 <div class="field">
+
                     <label>Contact Number</label>
+
                     <input type="tel" id="contactNumber" required>
+
                 </div>
 
                 <!-- EMAIL -->
                 <div class="field">
+
                     <label>Email Address</label>
+
                     <input type="email" id="emailAddress" required>
+
                 </div>
 
-                  <!-- GUESTS -->
+                <!-- GUESTS -->
                 <div class="field">
+
                     <label>Guests</label>
+
                     <div class="select-wrapper">
+
                         <select id="guests" required>
+
                             <option value="1">1 Guest</option>
                             <option value="2">2 Guests</option>
                             <option value="3">3 Guests</option>
                             <option value="4">4 Guests</option>
 
                         </select>
+
                     </div>
+
                 </div>
 
                 <!-- TOTAL -->
                 <div class="field">
+
                     <label>Total Price</label>
-                    <div id="totalPrice" style="font-weight:bold; font-size:18px;">
+
+                    <div id="totalPrice"
+                         style="font-weight:bold; font-size:18px;">
+
                         ₱0
+
                     </div>
+
                 </div>
 
                 <!-- BUTTON -->
-                <button type="submit">Book Now</button>
+                <button type="submit">
+
+                    Book Now
+
+                </button>
 
             </form>
 
@@ -147,79 +220,205 @@
 
 {% else %}
 
-<!-- IF ROOM NOT FOUND -->
+<!-- ROOM NOT FOUND -->
 <div style="text-align:center; margin-top:100px;">
+
     <h2>Room not found</h2>
-    <a href="/rooms/">Go back to rooms</a>
+
+    <a href="/rooms/">
+
+        Go back to rooms
+
+    </a>
+
 </div>
 
 {% endif %}
 
-<!-- =========================
-     BOOKING SCRIPT (API ONLY)
-========================= -->
+<!-- FLATPICKR -->
+<script>
+
+const bookedDates = JSON.parse('{{ booked_dates_json|escapejs }}');
+
+function markBookedDates() {
+    setTimeout(() => {
+
+        document.querySelectorAll(".flatpickr-day").forEach(day => {
+
+            if (!day.dateObj) return;
+
+            const formatted =
+                day.dateObj.toISOString().split("T")[0];
+
+            if (bookedDates.includes(formatted)) {
+                day.classList.add("booked-date");
+            }
+        });
+
+    }, 20);
+}
+
+const checkIn = flatpickr("#datePicker", {
+
+    minDate: "today",
+    disable: bookedDates,
+    dateFormat: "Y-m-d",
+
+    onReady: markBookedDates,
+    onMonthChange: markBookedDates,
+    onYearChange: markBookedDates,
+
+    onChange: function(selectedDates, dateStr) {
+
+    if (!selectedDates.length) return;
+
+    let checkInDate = selectedDates[0];
+
+    // set minDate safely
+    checkOut.set("minDate", checkInDate);
+
+    // compute next day
+    let nextDay = new Date(checkInDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    // IMPORTANT FIX:
+    // wait for flatpickr to finish recalculating
+    setTimeout(() => {
+        checkOut.setDate(nextDay, false); // ❗ false = no revalidation reset
+    }, 80);
+}
+});
+
+const checkOut = flatpickr("#checkOutDate", {
+
+    minDate: "today",
+    disable: bookedDates,
+    dateFormat: "Y-m-d",
+
+    onChange: function(selectedDates) {
+        const checkIn = document.getElementById("datePicker").value;
+
+        if (selectedDates.length && new Date(selectedDates[0]) <= new Date(checkIn)) {
+            alert("Check-out must be after check-in");
+            this.clear();
+        }
+    }
+});
+</script>
+
+<!-- BOOKING SCRIPT -->
 <script>
 
 function getNights() {
-    const start = new Date(document.getElementById("datePicker").value);
-    const end = new Date(document.getElementById("checkOutDate").value);
+
+    const start =
+        new Date(document.getElementById("datePicker").value);
+
+    const end =
+        new Date(document.getElementById("checkOutDate").value);
 
     const diffTime = end - start;
-    const days = diffTime / (1000 * 60 * 60 * 24);
+
+    const days =
+        diffTime / (1000 * 60 * 60 * 24);
 
     return days > 0 ? days : 0;
 }
 
 function calculateTotal() {
-    const price = parseFloat("{{ room.price }}");
 
-    const nights = getNights();
+    const price =
+        parseFloat("{{ room.price }}");
+
+    const nights =
+        getNights();
 
     if (!nights) {
-        document.getElementById("totalPrice").innerText = "₱0";
-        return;
+
+        document.getElementById("totalPrice").innerText =
+            "₱0";
+
+        return 0;
     }
 
-    const total = price * nights;
+    const total =
+        price * nights;
 
     document.getElementById("totalPrice").innerText =
-        "₱" + total.toLocaleString() + " (" + nights + " nights)";
+        "₱" + total.toLocaleString() +
+        " (" + nights + " nights)";
+
+    return total;
 }
 
-document.getElementById("datePicker").addEventListener("change", calculateTotal);
-document.getElementById("checkOutDate").addEventListener("change", calculateTotal);
+document.getElementById("datePicker")
+    .addEventListener("change", calculateTotal);
 
-// BOOKING FUNCTION (API)
+document.getElementById("checkOutDate")
+    .addEventListener("change", calculateTotal);
+
+
+// BOOKING FUNCTION
 function bookNow(event) {
+
     event.preventDefault();
 
     fetch("/api/book-room/", {
+
         method: "POST",
+
         headers: {
             "Content-Type": "application/json"
         },
+
         body: JSON.stringify({
-            room: document.getElementById("roomField").value,
-            full_name: document.getElementById("fullName").value,
-            contact_number: document.getElementById("contactNumber").value,
-            email: document.getElementById("emailAddress").value,
-            check_in_date: document.getElementById("datePicker").value,
-            check_out_date: document.getElementById("checkOutDate").value,
-            guests: document.getElementById("guests").value,
-            total_price: calculateTotal()
+
+            room:
+                document.getElementById("roomField").value,
+
+            full_name:
+                document.getElementById("fullName").value,
+
+            contact_number:
+                document.getElementById("contactNumber").value,
+
+            email:
+                document.getElementById("emailAddress").value,
+
+            check_in_date:
+                document.getElementById("datePicker").value,
+
+            check_out_date:
+                document.getElementById("checkOutDate").value,
+
+            guests:
+                document.getElementById("guests").value,
+
+            total_price:
+                calculateTotal()
         })
     })
+
     .then(res => res.json())
+
     .then(data => {
+
         if (data.status === "success") {
+
             alert("Booking Successful!");
+
             window.location.href = "/rooms/";
+
         } else {
+
             alert("Booking failed: " + data.message);
         }
     })
+
     .catch(err => {
+
         console.error(err);
+
         alert("Something went wrong.");
     });
 }

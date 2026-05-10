@@ -349,3 +349,62 @@ button:hover {
     font-size: 22px;
     cursor: pointer;
 }
+
+/* =========================
+   BASE CLEAN CALENDAR
+========================= */
+.flatpickr-calendar {
+    box-shadow: none !important;
+    border: 1px solid #eee !important;
+    border-radius: 8px !important;
+    font-family: inherit;
+}
+
+/* REMOVE ALL SHAPES / BOXES / CIRCLES */
+.flatpickr-day {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* REMOVE TODAY HIGHLIGHT COMPLETELY */
+.flatpickr-day.today {
+    background: transparent !important;
+    border: none !important;
+    color: inherit !important;
+}
+
+/* REMOVE SELECTION STYLES */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.inRange {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* =========================
+   PAST DATES (LIGHT GRAY)
+========================= */
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.flatpickr-disabled:not(.booked-date) {
+    color: #c9c9c9 !important;
+    cursor: not-allowed !important;
+}
+
+/* =========================
+   BOOKED DATES (DARK GRAY)
+========================= */
+.flatpickr-day.booked-date {
+    color: #eb7a7a !important;
+    font-weight: 500;
+    cursor: not-allowed !important;
+}
+
+/* =========================
+   REMOVE HOVER EFFECTS
+========================= */
+.flatpickr-day:hover {
+    background: transparent !important;
+}

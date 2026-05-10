@@ -10,6 +10,8 @@ from .models import UserProfile
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils.text import slugify
+from datetime import timedelta
+from datetime import datetime
 
 import json
 from .models import GuestBooking, Room, AdminBooking, RoomImage
@@ -219,22 +221,47 @@ def rooms(request):
 # ROOM DETAILS PAGE
 # =========================
 def details(request):
+
     room_slug = request.GET.get('room')
 
     room = None
+    booked_dates = []
+
     if room_slug:
+
         room = Room.objects.filter(
             room_type__iexact=room_slug.replace("-", " ")
         ).first()
 
-        # 🔥 THIS IS THE FIX
+        # Amenities
         if room and room.amenities:
             room.amenities_list = [a.strip() for a in room.amenities.split(",")]
         else:
             room.amenities_list = []
 
+        # GET BOOKINGS
+        if room:
+
+            bookings = Booking.objects.filter(
+                room=room,
+                status__iexact='Confirmed'
+            )
+
+            for booking in bookings:
+
+                current = booking.check_in_date
+
+                while current < booking.check_out_date:
+
+                    booked_dates.append(
+                        current.strftime("%Y-%m-%d")
+                    )
+
+                    current += timedelta(days=1)
+
     return render(request, 'details.html', {
-        'room': room
+        'room': room,
+        'booked_dates_json': json.dumps(booked_dates)
     })
 
 
@@ -245,9 +272,10 @@ def details(request):
 def admin_rooms(request):
 
     if request.method == "POST":
-        Room.objects.create(
+
+        room = Room.objects.create(
             room_type=request.POST.get('room_type'),
-            price=request.POST.get('price'),
+            price=request.POST.get('price').replace(",", ""),
             max_guests=request.POST.get('max_guests'),
             amenities=request.POST.get('amenities'),
             details=request.POST.get('details'),
@@ -255,11 +283,16 @@ def admin_rooms(request):
             is_available=True
         )
 
-        return redirect('admin_rooms')
+        # SAVE GALLERY IMAGES
+        for img in request.FILES.getlist("gallery_images"):
+            RoomImage.objects.create(
+                room=room,
+                image=img
+            )
+
+        return redirect('admin_rooms')  # ✅ ONLY HERE
 
     rooms = Room.objects.all().order_by('-created_at')
-
-    print("ROOM COUNT:", rooms.count())  # DEBUG
 
     return render(request, 'admin_rooms.html', {
         'rooms': rooms
@@ -396,6 +429,22 @@ def room_details(request):
 
         price = room_prices.get(room.lower(), 0)
 
+        check_in = data.get("check_in_date")
+        check_out = data.get("check_out_date")
+
+        existing = Booking.objects.filter(
+            room__iexact=data.get("room"),
+            status="Confirmed",
+            check_in_date__lt=check_out,
+            check_out_date__gt=check_in
+        ).exists()
+
+        if existing:
+            return JsonResponse({
+                "status": "error",
+                "message": "Room is already booked for selected dates"
+            })
+
         Booking.objects.create(
         room=room,
         full_name=name,
@@ -403,7 +452,7 @@ def room_details(request):
         email=email,
         check_in_date=date,
         guests=guests,
-        price=price,   # ✅ ADD THIS
+        price=price, 
         status='Pending'
 )
 
@@ -421,7 +470,8 @@ def room_details(request):
 def book_room(request):
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
+
+            data = json.loads(request.body)  # ✅ THIS FIXES YOUR ERROR
 
             room_prices = {
                 "single": 2000,
@@ -440,17 +490,17 @@ def book_room(request):
             price = room_prices.get(room_name, 0)
 
             Booking.objects.create(
-            user=request.user,   # 🔥 IMPORTANT
-            room=data.get("room"),
-            full_name=data.get("full_name"),
-            contact_number=data.get("contact_number"),
-            email=data.get("email"),
-            check_in_date=data.get("check_in_date"),
-            check_out_date=data.get("check_out_date"),
-            guests=data.get("guests"),
-            price=price,   # ✅ ADD THIS
-            status='Pending'
-)
+                user=request.user,
+                room=data.get("room"),
+                full_name=data.get("full_name"),
+                contact_number=data.get("contact_number"),
+                email=data.get("email"),
+                check_in_date=data.get("check_in_date"),
+                check_out_date=data.get("check_out_date"),
+                guests=data.get("guests"),
+                price=price,
+                status='Pending'
+            )
 
             return JsonResponse({
                 "status": "success",
@@ -458,7 +508,6 @@ def book_room(request):
             })
 
         except Exception as e:
-            print("ERROR:", e)  # 🔥 DEBUG
             return JsonResponse({
                 "status": "error",
                 "message": str(e)
@@ -530,7 +579,6 @@ def admin_guests(request):
         'guests': guests
     })
 
-
 @login_required
 def delete_guest(request, user_id):
     if not request.user.is_staff:
@@ -538,8 +586,22 @@ def delete_guest(request, user_id):
 
     user = get_object_or_404(User, id=user_id)
     user.delete()
+
     return redirect('admin_guests')
 
+@login_required
+def previous_bookings(request):
+    bookings = Booking.objects.filter(status="Completed").order_by("-created_at")
 
+    for b in bookings:
+        b.nights = (b.check_out_date - b.check_in_date).days
+        b.total_price = b.nights * b.price
 
+    return render(request, "admin_bookings.html", {
+        "bookings": bookings
+    })
+
+def previous_bookings(request):
+    bookings = Booking.objects.filter(status="completed").order_by("-id")
+    return render(request, "admin_bookings.html", {"bookings": bookings})
 

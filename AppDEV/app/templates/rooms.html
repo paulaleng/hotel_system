@@ -5,6 +5,7 @@
     <title>Rooms | Grand Solace Hotel</title>
 
     {% load static %}
+    {% load humanize %}
 
     <link rel="stylesheet" href="{% static 'components/navbar.css' %}">
     <link rel="stylesheet" href="{% static 'styles/room.css' %}">
@@ -27,20 +28,12 @@ function searchRooms() {
 }
 </script>
 
-<!-- GET URL PARAMS -->
-<script>
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
-</script>
-
+<!-- NAVIGATION -->
 <script>
 function goToDetails(room) {
     window.location.href = "/details/?room=" + room;
 }
 </script>
-
 
 <div class="title">
     <h1>Choose your stay</h1>
@@ -48,12 +41,13 @@ function goToDetails(room) {
 </div>
 
 <div class="search-box">
-    <input type="text" id="roomSearch" placeholder="Search room type..." onkeyup="searchRooms()">
+    <input type="text"
+           id="roomSearch"
+           placeholder="Search room type..."
+           onkeyup="searchRooms()">
 </div>
 
-<!-- =========================
-     ROOM LIST (DB SYNCED)
-========================= -->
+<!-- ROOM LIST -->
 <div class="room-list">
 
     {% for room in rooms %}
@@ -62,42 +56,66 @@ function goToDetails(room) {
 
         <!-- IMAGE -->
         <div class="room-img">
+
             {% if room.image %}
+
                 <img src="{{ room.image.url }}">
+
             {% else %}
+
                 <img src="{% static 'images/default.png' %}">
+
             {% endif %}
+
         </div>
 
         <!-- INFO -->
         <div class="room-info">
+
             <h2>{{ room.room_type }}</h2>
+
             <p>{{ room.details }}</p>
 
             {% if room.amenities %}
+
             <ul class="freebies">
-               {% for item in room.amenities_list %}
+
+                {% for item in room.amenities_list %}
+
                     <li>{{ item }}</li>
+
                 {% endfor %}
+
             </ul>
+
             {% endif %}
+
         </div>
 
         <!-- PRICE -->
         <div class="room-price">
-            <h3>₱{{ room.price }} / night</h3>
 
-         <button onclick="goToDetails('{{ room.room_type|lower|slugify }}')">
-            Select
-        </button>
+            <h3>
+                ₱{{ room.price|intcomma }} / night
+            </h3>
+
+            <button onclick="goToDetails('{{ room.room_type|lower|slugify }}')">
+
+                Select
+
+            </button>
+
         </div>
 
     </div>
 
     {% empty %}
-        <p style="text-align:center; width:100%;">No rooms available.</p>
-    {% endfor %}
 
+        <p style="text-align:center; width:100%;">
+            No rooms available.
+        </p>
+
+    {% endfor %}
 
 </div>
 
