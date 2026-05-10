@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,220 +8,253 @@ import {
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navbar from './navbar';
 
-import { useNavigation } from "@react-navigation/native"; // Import the navbar component
+const APP_URL = 'http://192.168.1.33:8000';
 
-const ScheduleScreen = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState('all');
-  const [loading, setLoading] = useState(false);
-  
-  // Sample data - replace with your actual API calls
-  const [reservations, setReservations] = useState([
-    {
-      id: 1,
-      room: 'Deluxe Suite',
-      check_in_date: '2024-12-25',
-      guests: '2 Adults, 1 Child',
-      status: 'Confirmed'
-    },
-    {
-      id: 2,
-      room: 'Ocean View',
-      check_in_date: '2024-12-28',
-      guests: '2 Adults',
-      status: 'Pending'
-    }
-  ]);
+// ─────────────────────────────────────────────
+// STATUS helpers
+// ─────────────────────────────────────────────
+const STATUS_COLORS = {
+  Pending:   '#ffc107',
+  Confirmed: '#28a745',
+  Cancelled: '#dc3545',
+  Rejected:  '#dc3545',
+  Completed: '#6c757d',
+};
 
-  const [history, setHistory] = useState([
-    {
-      id: 3,
-      room: 'Standard Room',
-      check_in_date: '2024-11-15',
-      guests: '1 Adult',
-      status: 'Completed'
-    },
-    {
-      id: 4,
-      room: 'Family Suite',
-      check_in_date: '2024-10-20',
-      guests: '4 Adults',
-      status: 'Completed'
-    }
-  ]);
-
-  // Function to fetch real data from your backend
-  const fetchBookings = async () => {
-    setLoading(true);
-    try {
-      // Replace with your actual API endpoint
-      // const response = await fetch('http://YOUR_IP_ADDRESS:8000/api/bookings/', {
-      //   headers: {
-      //     'Authorization': 'Bearer YOUR_TOKEN',
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      // const data = await response.json();
-      // setReservations(data.reservations);
-      // setHistory(data.history);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const getStatusStyle = (status) => {
-    switch(status) {
-      case 'Pending':
-        return styles.statusPending;
-      case 'Confirmed':
-        return styles.statusUpcoming;
-      case 'Cancelled':
-        return styles.statusCancelled;
-      case 'Completed':
-        return styles.statusPast;
-      default:
-        return styles.statusDefault;
-    }
-  };
-
-  const getStatusText = (status) => {
-    if (status === 'Completed') return 'Completed';
-    return status;
-  };
-
-  const renderReservationCard = (item) => (
-    <TouchableOpacity key={item.id} style={styles.card} onPress={() => {
-      // Navigate to booking details if needed
-      // navigation.navigate('BookingDetails', { bookingId: item.id });
-    }}>
-      <View style={styles.leftSection}>
-        <Text style={styles.roomText}>{item.room}</Text>
-      </View>
-      
-      <View style={styles.middleSection}>
-        <Text style={styles.metaText}>📅 {item.check_in_date}</Text>
-        <Text style={styles.metaText}>👥 {item.guests}</Text>
-      </View>
-      
-      <View style={[styles.statusContainer, getStatusStyle(item.status)]}>
-        <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderHistoryCard = (item) => (
-    <View key={item.id} style={styles.card}>
-      <View style={styles.leftSection}>
-        <Text style={styles.roomText}>{item.room}</Text>
-      </View>
-      
-      <View style={styles.middleSection}>
-        <Text style={styles.metaText}>📅 {item.check_in_date}</Text>
-        <Text style={styles.metaText}>👥 {item.guests}</Text>
-      </View>
-      
-      <View style={[styles.statusContainer, styles.statusPast]}>
-        <Text style={styles.statusText}>✓ Completed</Text>
+// ─────────────────────────────────────────────
+// BOOKING CARD
+// ─────────────────────────────────────────────
+const BookingCard = ({ item }) => (
+  <View style={styles.card}>
+    {/* Room + name */}
+    <View style={styles.cardTop}>
+      <Text style={styles.roomText}>{item.room}</Text>
+      <View style={[styles.badge, { backgroundColor: STATUS_COLORS[item.status] || '#007bff' }]}>
+        <Text style={styles.badgeText}>{item.status}</Text>
       </View>
     </View>
-  );
 
-  const shouldShowReservations = activeTab === 'all' || activeTab === 'reservation';
-  const shouldShowHistory = activeTab === 'all' || activeTab === 'history';
+    <Text style={styles.nameText}>{item.full_name}</Text>
 
+    {/* Details row */}
+    <View style={styles.cardDetails}>
+      <Text style={styles.metaText}>📅 Check-in: {item.check_in_date}</Text>
+      {!!item.check_out_date && (
+        <Text style={styles.metaText}>🏁 Check-out: {item.check_out_date}</Text>
+      )}
+      <Text style={styles.metaText}>👥 Guests: {item.guests}</Text>
+      <Text style={styles.metaText}>
+        💰 Total: ₱{Number(item.price).toLocaleString()}
+      </Text>
+    </View>
+  </View>
+);
+
+// ─────────────────────────────────────────────
+// MAIN SCREEN
+// ─────────────────────────────────────────────
+const ScheduleScreen = ({ navigation }) => {
+  const [activeTab,    setActiveTab]    = useState('all');
+  const [loading,      setLoading]      = useState(true);
+  const [refreshing,   setRefreshing]   = useState(false);
+  const [reservations, setReservations] = useState([]);
+  const [history,      setHistory]      = useState([]);
+  const [error,        setError]        = useState(null);
+  const [debugInfo,    setDebugInfo]    = useState('');   // ← remove after testing
+
+  // ── fetch ────────────────────────────────
+  const fetchBookings = useCallback(async (isRefresh = false) => {
+    isRefresh ? setRefreshing(true) : setLoading(true);
+    setError(null);
+
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      console.log('auth_token from storage:', token);
+
+      if (!token) {
+        setError('You are not logged in. Please log in to view your schedule.');
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      console.log('Fetching:', `${APP_URL}/api/schedule/`);
+
+      const response = await fetch(`${APP_URL}/api/schedule/`, {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type':  'application/json',
+        },
+      });
+
+      console.log('HTTP status:', response.status);
+
+      const text = await response.text();        // read raw first
+      console.log('Raw response:', text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setError(`Server returned unexpected response:\n${text.slice(0, 200)}`);
+        return;
+      }
+
+      console.log('Parsed data:', JSON.stringify(data));
+
+      if (data.status === 'success') {
+        setReservations(data.reservations || []);
+        setHistory(data.history      || []);
+        setDebugInfo(
+          `✅ ${data.reservations?.length ?? 0} reservation(s), ` +
+          `${data.history?.length ?? 0} history item(s)`
+        );
+      } else {
+        setError(data.message || 'Server returned an error.');
+      }
+    } catch (err) {
+      console.error('Schedule fetch error:', err);
+      setError(`Network error: ${err.message}`);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchBookings(); }, [fetchBookings]);
+
+  const showReservations = activeTab === 'all' || activeTab === 'reservation';
+  const showHistory      = activeTab === 'all' || activeTab === 'history';
+
+  // ── loading ───────────────────────────────
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <Navbar />
-        <View style={styles.loadingContainer}>
+        <View style={styles.centered}>
           <ActivityIndicator size="large" color="#007bff" />
-          <Text style={styles.loadingText}>Loading your bookings...</Text>
+          <Text style={styles.loadingText}>Loading your bookings…</Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  // ── error ─────────────────────────────────
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Navbar />
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => fetchBookings()}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.retryBtn, { backgroundColor: '#555', marginTop: 10 }]}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.retryText}>Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── main ─────────────────────────────────
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0b0b2f" />
-      
-      {/* Navbar */}
       <Navbar />
-      
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.scheduleWrapper}>
-          <View style={styles.scheduleContainer}>
-            
+
+      <ScrollView
+        style={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchBookings(true)}
+            colors={['#007bff']}
+          />
+        }
+      >
+        <View style={styles.wrapper}>
+          <View style={styles.container}>
+
             {/* Header */}
-            <View style={styles.scheduleHeader}>
-              <Text style={styles.headerTitleText}>My Schedule</Text>
-              <Text style={styles.headerSubtitle}>Manage your bookings and stay history</Text>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>My Schedule</Text>
+              <Text style={styles.headerSub}>Manage your bookings and stay history</Text>
+              {/* Debug info — remove after confirming it works */}
+              {!!debugInfo && (
+                <Text style={styles.debugText}>{debugInfo}</Text>
+              )}
             </View>
-            
+
             {/* Tabs */}
-            <View style={styles.tabsContainer}>
-              <TouchableOpacity 
-                style={[styles.tab, activeTab === 'all' && styles.activeTab]}
-                onPress={() => setActiveTab('all')}
-              >
-                <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>All</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.tab, activeTab === 'reservation' && styles.activeTab]}
-                onPress={() => setActiveTab('reservation')}
-              >
-                <Text style={[styles.tabText, activeTab === 'reservation' && styles.activeTabText]}>Reservation</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.tab, activeTab === 'history' && styles.activeTab]}
-                onPress={() => setActiveTab('history')}
-              >
-                <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>History</Text>
-              </TouchableOpacity>
+            <View style={styles.tabs}>
+              {['all', 'reservation', 'history'].map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  style={[styles.tab, activeTab === tab && styles.activeTab]}
+                  onPress={() => setActiveTab(tab)}
+                >
+                  <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                    {tab === 'all'         ? 'All'
+                     : tab === 'reservation' ? 'Upcoming'
+                     : 'History'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-            
-            {/* Reservations Section */}
-            {shouldShowReservations && (
+
+            {/* Reservations */}
+            {showReservations && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>📌 Upcoming Reservations</Text>
+                <Text style={styles.sectionTitle}>
+                  📌 Upcoming Reservations
+                  <Text style={styles.countText}> ({reservations.length})</Text>
+                </Text>
+
                 {reservations.length > 0 ? (
-                  reservations.map(renderReservationCard)
+                  reservations.map((item) => (
+                    <BookingCard key={String(item.id)} item={item} />
+                  ))
                 ) : (
-                  <View style={styles.emptyContainer}>
+                  <View style={styles.emptyBox}>
                     <Text style={styles.emptyText}>No upcoming reservations</Text>
-                    <TouchableOpacity 
-                      style={styles.bookButton}
+                    <TouchableOpacity
+                      style={styles.bookBtn}
                       onPress={() => navigation.navigate('Rooms')}
                     >
-                      <Text style={styles.bookButtonText}>Book a Room →</Text>
+                      <Text style={styles.bookBtnText}>Book a Room →</Text>
                     </TouchableOpacity>
                   </View>
                 )}
               </View>
             )}
-            
-            {/* History Section */}
-            {shouldShowHistory && (
+
+            {/* History */}
+            {showHistory && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>📜 Booking History</Text>
+                <Text style={styles.sectionTitle}>
+                  📜 Booking History
+                  <Text style={styles.countText}> ({history.length})</Text>
+                </Text>
+
                 {history.length > 0 ? (
-                  history.map(renderHistoryCard)
+                  history.map((item) => (
+                    <BookingCard key={String(item.id)} item={item} />
+                  ))
                 ) : (
-                  <Text style={styles.emptyText}>No booking history</Text>
+                  <Text style={styles.emptyText}>No booking history yet</Text>
                 )}
               </View>
             )}
-            
+
           </View>
         </View>
       </ScrollView>
@@ -229,161 +262,86 @@ const ScheduleScreen = ({ navigation }) => {
   );
 };
 
+export default ScheduleScreen;
+
+// ─────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scheduleWrapper: {
-    flex: 1,
-    padding: 16,
-  },
-  scheduleContainer: {
+  safeArea:    { flex: 1, backgroundColor: '#f5f5f5' },
+  scroll:      { flex: 1 },
+  centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  loadingText: { marginTop: 12, fontSize: 14, color: '#666' },
+  errorText:   { fontSize: 13, color: '#dc3545', textAlign: 'center', marginBottom: 16, lineHeight: 20 },
+  retryBtn:    { backgroundColor: '#007bff', paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
+  retryText:   { color: '#fff', fontWeight: '600' },
+
+  wrapper:   { padding: 16 },
+  container: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius:    12,
+    padding:         16,
+    elevation:       3,
+    shadowColor:     '#000',
+    shadowOffset:    { width: 0, height: 2 },
+    shadowOpacity:   0.1,
+    shadowRadius:    4,
   },
-  scheduleHeader: {
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  headerTitleText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
+
+  header:      { marginBottom: 20, alignItems: 'center' },
+  headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#333', marginBottom: 4 },
+  headerSub:   { fontSize: 13, color: '#888', textAlign: 'center' },
+  debugText:   { fontSize: 11, color: '#28a745', marginTop: 6 },
+
+  tabs: {
+    flexDirection:     'row',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-    marginBottom: 24,
+    marginBottom:      20,
   },
   tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
+    flex:              1,
+    paddingVertical:   11,
+    alignItems:        'center',
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  activeTab: {
-    borderBottomColor: '#007bff',
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#007bff',
-    fontWeight: '600',
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  card: {
-    flexDirection: 'row',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  leftSection: {
-    flex: 1,
-  },
-  roomText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
-  middleSection: {
-    flex: 2,
-  },
-  metaText: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 4,
-  },
-  statusContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  statusPending: {
-    backgroundColor: '#ffc107',
-  },
-  statusUpcoming: {
-    backgroundColor: '#28a745',
-  },
-  statusCancelled: {
-    backgroundColor: '#dc3545',
-  },
-  statusPast: {
-    backgroundColor: '#6c757d',
-  },
-  statusDefault: {
-    backgroundColor: '#007bff',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  bookButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  bookButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+  activeTab:     { borderBottomColor: '#007bff' },
+  tabText:       { fontSize: 14, color: '#888' },
+  activeTabText: { color: '#007bff', fontWeight: '700' },
 
-export default ScheduleScreen;
+  section:      { marginBottom: 28 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 12 },
+  countText:    { fontWeight: '400', color: '#888', fontSize: 14 },
+
+  card: {
+    backgroundColor: '#fafafa',
+    borderRadius:    10,
+    padding:         14,
+    marginBottom:    10,
+    borderWidth:     1,
+    borderColor:     '#ececec',
+  },
+  cardTop: {
+    flexDirection:  'row',
+    justifyContent: 'space-between',
+    alignItems:     'center',
+    marginBottom:   4,
+  },
+  roomText:    { fontSize: 15, fontWeight: '700', color: '#222', flex: 1 },
+  nameText:    { fontSize: 12, color: '#888', marginBottom: 8 },
+  cardDetails: { gap: 3 },
+  metaText:    { fontSize: 12, color: '#555' },
+
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical:   4,
+    borderRadius:      20,
+  },
+  badgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
+
+  emptyBox:    { alignItems: 'center', paddingVertical: 28 },
+  emptyText:   { textAlign: 'center', color: '#bbb', fontSize: 14, marginBottom: 14 },
+  bookBtn:     { backgroundColor: '#007bff', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  bookBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+});

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useNavigation, useRoute } from "@react-navigation/native";
 
@@ -67,7 +68,25 @@ export default function RoomDetails() {
   useEffect(() => {
     fetchRoom();
   }, []);
+useEffect(() => {
 
+  const loadUser = async () => {
+
+    const userData = await AsyncStorage.getItem('user');
+
+    if (userData) {
+
+      const user = JSON.parse(userData);
+
+      setFullName(user.username || '');
+      setEmail(user.email || '');
+      setContactNumber(user.contact_number || '');
+    }
+  };
+
+  loadUser();
+
+}, []);
   // =========================
   // FORMAT DATE
   // =========================
@@ -79,12 +98,22 @@ export default function RoomDetails() {
   // TOTAL PRICE
   // =========================
   const calculateDays = () => {
-    const diff =
-      (new Date(checkOut) - new Date(checkIn)) /
-      (1000 * 60 * 60 * 24);
 
-    return diff > 0 ? diff : 1;
-  };
+  const checkInDate = new Date(checkIn);
+  const checkOutDate = new Date(checkOut);
+
+  // REMOVE TIME
+  checkInDate.setHours(0, 0, 0, 0);
+  checkOutDate.setHours(0, 0, 0, 0);
+
+  const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+
+  const diffDays = Math.ceil(
+    diffTime / (1000 * 60 * 60 * 24)
+  );
+
+  return diffDays > 0 ? diffDays : 1;
+};
 
   const totalPrice = room
     ? calculateDays() * parseFloat(room.price)
@@ -93,70 +122,69 @@ export default function RoomDetails() {
   // =========================
   // BOOK ROOM
   // =========================
-  const handleBooking = async () => {
+ const handleBooking = async () => {
 
-    if (
-      !fullName ||
-      !contactNumber ||
-      !email ||
-      !guests
-    ) {
-      Alert.alert("Error", "Please fill in all fields");
-      return;
-    }
+  if (!fullName || !contactNumber || !email || !guests) {
+    Alert.alert("Error", "Please fill in all fields");
+    return;
+  }
 
-    try {
+  try {
 
-      setBookingLoading(true);
+    setBookingLoading(true);
 
-      const response = await fetch(`${APP_URL}/api/book-room/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    // GET TOKEN
+    const token = await AsyncStorage.getItem('auth_token');
 
-        body: JSON.stringify({
-          room: room.room_type,
-          full_name: fullName,
-          contact_number: contactNumber,
-          email: email,
-          check_in_date: formatDate(checkIn),
-          check_out_date: formatDate(checkOut),
-          guests: guests,
-        }),
-      });
+    const response = await fetch(`${APP_URL}/api/book-room/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
 
-      const data = await response.json();
+        // IMPORTANT
+        'Authorization': `Token ${token}`,
+      },
 
-      if (data.status === "success") {
+      body: JSON.stringify({
+        room: room.room_type,
+        full_name: fullName,
+        contact_number: contactNumber,
+        email: email,
+        check_in_date: formatDate(checkIn),
+        check_out_date: formatDate(checkOut),
+        guests: guests,
+        price: totalPrice,
+      }),
+    });
 
-        Alert.alert(
-          "Success",
-          "Booking saved successfully!"
-        );
+    const data = await response.json();
 
-        setFullName('');
-        setContactNumber('');
-        setEmail('');
-        setGuests('1');
-
-      } else {
-        Alert.alert("Error", data.message);
-      }
-
-    } catch (error) {
-
-      console.log(error);
+    if (data.status === "success") {
 
       Alert.alert(
-        "Error",
-        "Something went wrong"
+        "Success",
+        "Booking saved successfully!"
       );
 
-    } finally {
-      setBookingLoading(false);
+      navigation.navigate("Schedule");
+
+    } else {
+      Alert.alert("Error", data.message);
     }
-  };
+
+  } catch (error) {
+
+    console.log(error);
+
+    Alert.alert(
+      "Error",
+      "Something went wrong"
+    );
+
+  } finally {
+    setBookingLoading(false);
+  }
+};
 
   if (loading) {
     return (

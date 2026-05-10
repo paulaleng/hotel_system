@@ -5,27 +5,35 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.timezone import now
-from .models import Booking
-from .models import UserProfile 
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-
-import json
-from .models import Room
-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.contrib.messages import get_messages
-from django.utils.timezone import now
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.core import signing
 
 import json
 from .models import Booking, UserProfile, Room
+
+
+# =========================
+# TOKEN HELPERS
+# (uses Django's built-in signing — no DRF needed)
+# =========================
+def make_token(user):
+    """Create a signed token encoding the user's pk."""
+    return signing.dumps({'user_id': user.pk}, salt='auth-token')
+
+
+def get_user_from_token(request):
+    """Return User from 'Authorization: Token <token>' header, or None."""
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Token '):
+        return None
+    token_key = auth.split(' ', 1)[1]
+    try:
+        # Token valid for 30 days
+        data = signing.loads(token_key, salt='auth-token', max_age=60 * 60 * 24 * 30)
+        return User.objects.get(pk=data['user_id'])
+    except Exception:
+        return None
 
 
 # =========================
@@ -45,32 +53,32 @@ def admin_login(request):
 
 
 # =========================
-# PROFILE
+# PROFILE (TEMPLATE)
 # =========================
 @login_required
 def profile(request):
     user = request.user
-    profile, created = UserProfile.objects.get_or_create(user=user)
+    profile_obj, _ = UserProfile.objects.get_or_create(user=user)
 
     if request.method == "POST":
-        user.email = request.POST.get("email")
+        user.email = request.POST.get("email", user.email)
         user.save()
-        profile.contact_number = request.POST.get("phone")
-        profile.address = request.POST.get("address")
+        profile_obj.contact_number = request.POST.get("phone", profile_obj.contact_number)
+        profile_obj.address        = request.POST.get("address", profile_obj.address)
         if "profile_image" in request.FILES:
-            profile.profile_image = request.FILES["profile_image"]
-        profile.save()
+            profile_obj.profile_image = request.FILES["profile_image"]
+        profile_obj.save()
         messages.success(request, "Profile updated successfully!")
         return redirect("profile")
 
     total_bookings = Booking.objects.filter(email=user.email).count() if user.email else 0
 
     return render(request, "profile.html", {
-        "username": user.username,
-        "email": user.email,
-        "date_joined": user.date_joined,
-        "last_login": user.last_login,
-        "profile": profile,
+        "username":       user.username,
+        "email":          user.email,
+        "date_joined":    user.date_joined,
+        "last_login":     user.last_login,
+        "profile":        profile_obj,
         "total_bookings": total_bookings,
     })
 
@@ -94,21 +102,20 @@ def homepage(request):
 # =========================
 @login_required
 def admin_dashboard(request):
-    today = now().date()
-    total_bookings = Booking.objects.count()
-    total_guests = User.objects.filter(is_staff=False, is_superuser=False).count()
-    check_in_count = Booking.objects.filter(status='Confirmed').count()
-    check_out_count = Booking.objects.filter(status='Confirmed', check_out_date=today).count()
+    today               = now().date()
+    total_bookings      = Booking.objects.count()
+    total_guests        = User.objects.filter(is_staff=False, is_superuser=False).count()
+    check_in_count      = Booking.objects.filter(status='Confirmed').count()
+    check_out_count     = Booking.objects.filter(status='Confirmed', check_out_date=today).count()
     recent_reservations = Booking.objects.order_by('-id')[:5]
 
-    context = {
-        'total_bookings': total_bookings,
-        'total_guests': total_guests,
-        'check_in_count': check_in_count,
-        'check_out_count': check_out_count,
+    return render(request, 'admin_dashboard.html', {
+        'total_bookings':      total_bookings,
+        'total_guests':        total_guests,
+        'check_in_count':      check_in_count,
+        'check_out_count':     check_out_count,
         'recent_reservations': recent_reservations,
-    }
-    return render(request, 'admin_dashboard.html', context)
+    })
 
 
 # =========================
@@ -135,7 +142,6 @@ def user_login(request):
             return redirect('homepage')
         else:
             messages.error(request, "Invalid username or password")
-            return render(request, 'login.html')
     return render(request, 'login.html')
 
 
@@ -144,14 +150,13 @@ def user_login(request):
 # =========================
 def register(request):
     if request.method == "POST":
-        username = request.POST.get('username')
-        email = request.POST.get('email')
+        username  = request.POST.get('username')
+        email     = request.POST.get('email')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
 
         if password1 != password2:
             return render(request, 'register.html', {'error': 'Passwords do not match'})
-
         if User.objects.filter(username=username).exists():
             return render(request, 'register.html', {'error': 'Username already exists'})
 
@@ -182,8 +187,8 @@ def details(request):
 # =========================
 @login_required
 def admin_rooms(request):
-    rooms = Room.objects.all()
-    return render(request, 'admin_rooms.html', {'rooms': rooms})
+    all_rooms = Room.objects.all()
+    return render(request, 'admin_rooms.html', {'rooms': all_rooms})
 
 
 # =========================
@@ -203,13 +208,11 @@ def admin_guests(request):
 @login_required
 def admin_bookings(request):
     bookings = Booking.objects.filter(status__iexact='Pending').order_by('-created_at')
-    for b in bookings:
-        b.total_price = b.price
     return render(request, "admin_bookings.html", {"bookings": bookings})
 
 
 # =========================
-# DELETE BOOKING
+# DELETE / REJECT / CONFIRM BOOKING
 # =========================
 @login_required
 def delete_booking(request, booking_id):
@@ -219,9 +222,6 @@ def delete_booking(request, booking_id):
     return redirect('admin_bookings')
 
 
-# =========================
-# REJECT BOOKING
-# =========================
 @login_required
 def reject_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -230,9 +230,6 @@ def reject_booking(request, booking_id):
     return redirect('admin_bookings')
 
 
-# =========================
-# CONFIRM BOOKING
-# =========================
 @login_required
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -242,46 +239,40 @@ def confirm_booking(request, booking_id):
 
 
 # =========================
-# ADD ROOM (TEMPLATE)
+# ADD / EDIT / DELETE / TOGGLE ROOM (TEMPLATE)
 # =========================
 @login_required
 def add_room(request):
     if request.method == "POST":
         Room.objects.create(
-            room_type=request.POST.get('room_type'),
-            price=request.POST.get('price'),
-            max_guests=request.POST.get('max_guests', 1),
-            amenities=request.POST.get('amenities', ''),
-            details=request.POST.get('details', ''),
-            image=request.FILES.get('image'),
-            is_available=True
+            room_type    = request.POST.get('room_type'),
+            price        = request.POST.get('price'),
+            max_guests   = request.POST.get('max_guests', 1),
+            amenities    = request.POST.get('amenities', ''),
+            details      = request.POST.get('details', ''),
+            image        = request.FILES.get('image'),
+            is_available = True,
         )
         return redirect('admin_rooms')
     return render(request, 'add_room.html')
 
 
-# =========================
-# EDIT ROOM (TEMPLATE)
-# =========================
 @login_required
 def edit_room(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     if request.method == "POST":
-        room.room_type = request.POST.get('room_type')
-        room.price = request.POST.get('price')
+        room.room_type  = request.POST.get('room_type',  room.room_type)
+        room.price      = request.POST.get('price',      room.price)
         room.max_guests = request.POST.get('max_guests', room.max_guests)
-        room.amenities = request.POST.get('amenities', room.amenities)
-        room.details = request.POST.get('details', room.details)
+        room.amenities  = request.POST.get('amenities',  room.amenities)
+        room.details    = request.POST.get('details',    room.details)
         if request.FILES.get('image'):
-            room.image = request.FILES.get('image')
+            room.image = request.FILES['image']
         room.save()
         return redirect('admin_rooms')
     return render(request, 'edit_room.html', {'room': room})
 
 
-# =========================
-# DELETE ROOM (TEMPLATE)
-# =========================
 @login_required
 def delete_room(request, room_id):
     room = get_object_or_404(Room, id=room_id)
@@ -289,9 +280,6 @@ def delete_room(request, room_id):
     return redirect('admin_rooms')
 
 
-# =========================
-# TOGGLE ROOM STATUS (TEMPLATE)
-# =========================
 @login_required
 def toggle_room_status(request, room_id):
     room = get_object_or_404(Room, id=room_id)
@@ -316,26 +304,35 @@ def delete_guest(request, user_id):
 # BOOK NOW (TEMPLATE FORM)
 # =========================
 def room_details(request):
-    if request.method == "POST":
-        room = request.POST.get("room")
-        name = request.POST.get("fullName")
-        contact = request.POST.get("contactNumber")
-        email = request.POST.get("emailAddress")
-        date = request.POST.get("datePicker")
-        guests = request.POST.get("guests")
 
-        room_prices = {
-            "single": 2000, "twin": 3200, "standard": 3900,
-            "family": 5000, "deluxe": 5500, "suite": 7000,
-            "superior": 8500, "executive": 10000, "seaview": 12500, "penthouse": 20000,
-        }
-        price = room_prices.get(room.lower(), 0)
+    if request.method == "POST":
+
+        room_type = request.POST.get("room")
+        name      = request.POST.get("fullName")
+        contact   = request.POST.get("contactNumber")
+        email     = request.POST.get("emailAddress")
+        date      = request.POST.get("datePicker")
+        guests    = request.POST.get("guests")
+
+        # GET ROOM FROM DATABASE
+        room_obj = Room.objects.filter(room_type__iexact=room_type).first()
+
+        if not room_obj:
+            messages.error(request, "Room not found")
+            return redirect('rooms')
 
         Booking.objects.create(
-            room=room, full_name=name, contact_number=contact,
-            email=email, check_in_date=date, guests=guests,
-            price=price, status='Pending'
+            user=request.user if request.user.is_authenticated else None,
+            room=room_obj.room_type,
+            full_name=name,
+            contact_number=contact,
+            email=email,
+            check_in_date=date,
+            guests=guests,
+            price=room_obj.price,
+            status='Pending',
         )
+
         messages.success(request, "Booking saved!")
         return redirect('rooms')
 
@@ -343,49 +340,254 @@ def room_details(request):
 
 
 # =========================
-# SCHEDULE
+# SCHEDULE (TEMPLATE)
 # =========================
 @login_required
 def schedule(request):
-    user_email = request.user.email
-    reservations = Booking.objects.filter(email=user_email).order_by('-created_at')
-    history = Booking.objects.filter(email=user_email, status='Completed').order_by('-created_at')
+    user_email   = request.user.email
+    reservations = Booking.objects.filter(email=user_email).exclude(status='Completed').order_by('-created_at')
+    history      = Booking.objects.filter(email=user_email, status='Completed').order_by('-created_at')
     return render(request, "schedule.html", {
         "reservations": reservations,
-        "history": history
+        "history":      history,
     })
 
 
 # =========================================================
-# ROOM API ENDPOINTS
+# API ENDPOINTS
 # =========================================================
 
+def _room_to_dict(room):
+    return {
+        "id":           room.id,
+        "room_type":    room.room_type,
+        "price":        str(room.price),
+        "max_guests":   room.max_guests,
+        "amenities":    room.amenities,
+        "details":      room.details,
+        "is_available": room.is_available,
+        "image":        f"/media/{room.image}" if room.image else None,
+        "created_at":   room.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+
+def _booking_to_dict(b):
+    return {
+        "id":             b.id,
+        "room":           b.room,
+        "full_name":      b.full_name,
+        "contact_number": b.contact_number,
+        "email":          b.email,
+        "check_in_date":  str(b.check_in_date),
+        "check_out_date": str(b.check_out_date) if b.check_out_date else "",
+        "guests":         b.guests,
+        "price":          str(b.price),
+        "status":         b.status,
+        "created_at":     b.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+
+# =========================
+# API - LOGIN
+# =========================
+@csrf_exempt
+def api_login(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        data     = json.loads(request.body)
+        username = data.get("username", "").strip()
+        password = data.get("password", "")
+
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return JsonResponse({"status": "error", "message": "Invalid username or password"})
+
+        token       = make_token(user)
+        profile_obj, _ = UserProfile.objects.get_or_create(user=user)
+
+        return JsonResponse({
+            "status": "success",
+            "token":  token,
+            "user": {
+                "id":             user.id,
+                "username":       user.username,
+                "email":          user.email,
+                "date_joined":    user.date_joined.strftime("%b %d, %Y"),
+                "last_login":     user.last_login.strftime("%b %d, %Y %H:%M") if user.last_login else "",
+                "contact_number": profile_obj.contact_number or "",
+                "address":        profile_obj.address or "",
+                "profile_image":  f"/media/{profile_obj.profile_image}" if profile_obj.profile_image else None,
+                "total_bookings": Booking.objects.filter(email=user.email).count(),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
+
+
+# =========================
+# API - REGISTER
+# =========================
+@csrf_exempt
+def api_register(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        data      = json.loads(request.body)
+        username  = data.get("username", "").strip()
+        email     = data.get("email", "").strip()
+        password1 = data.get("password1", "")
+        password2 = data.get("password2", "")
+
+        if not username or not email or not password1:
+            return JsonResponse({"status": "error", "message": "All fields are required"})
+        if password1 != password2:
+            return JsonResponse({"status": "error", "message": "Passwords do not match"})
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"status": "error", "message": "Username already exists"})
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"status": "error", "message": "Email already registered"})
+
+        user = User.objects.create_user(username=username, email=email, password=password1)
+        UserProfile.objects.create(user=user)
+        token = make_token(user)
+
+        return JsonResponse({
+            "status":  "success",
+            "message": "Account created successfully",
+            "token":   token,
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
+
+
+# =========================
+# API - GET PROFILE
+# =========================
+@csrf_exempt
+def api_get_profile(request):
+    if request.method != "GET":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+
+    user = get_user_from_token(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+
+    try:
+        profile_obj, _ = UserProfile.objects.get_or_create(user=user)
+        return JsonResponse({
+            "status": "success",
+            "user": {
+                "id":             user.id,
+                "username":       user.username,
+                "email":          user.email,
+                "date_joined":    user.date_joined.strftime("%b %d, %Y"),
+                "last_login":     user.last_login.strftime("%b %d, %Y %H:%M") if user.last_login else "",
+                "contact_number": profile_obj.contact_number or "",
+                "address":        profile_obj.address or "",
+                "profile_image":  f"/media/{profile_obj.profile_image}" if profile_obj.profile_image else None,
+                "total_bookings": Booking.objects.filter(email=user.email).count(),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
+
+
+# =========================
+# API - UPDATE PROFILE
+# =========================
+@csrf_exempt
+def api_update_profile(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+
+    user = get_user_from_token(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+
+    try:
+        profile_obj, _ = UserProfile.objects.get_or_create(user=user)
+
+        if request.content_type and 'multipart' in request.content_type:
+            email   = request.POST.get("email",          user.email)
+            contact = request.POST.get("contact_number", profile_obj.contact_number)
+            address = request.POST.get("address",        profile_obj.address)
+            if request.FILES.get("profile_image"):
+                profile_obj.profile_image = request.FILES["profile_image"]
+        else:
+            data    = json.loads(request.body)
+            email   = data.get("email",          user.email)
+            contact = data.get("contact_number", profile_obj.contact_number)
+            address = data.get("address",        profile_obj.address)
+
+        user.email                 = email
+        profile_obj.contact_number = contact
+        profile_obj.address        = address
+        user.save()
+        profile_obj.save()
+
+        return JsonResponse({
+            "status":  "success",
+            "message": "Profile updated successfully",
+            "user": {
+                "username":       user.username,
+                "email":          user.email,
+                "contact_number": profile_obj.contact_number or "",
+                "address":        profile_obj.address or "",
+                "profile_image":  f"/media/{profile_obj.profile_image}" if profile_obj.profile_image else None,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
+
+
+# =========================
+# API - SCHEDULE
+# =========================
+@csrf_exempt
+def api_schedule(request):
+    if request.method != "GET":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+
+    user = get_user_from_token(request)
+    if not user:
+        return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+
+    try:
+        from django.db.models import Q
+
+        qs = Booking.objects.filter(
+            Q(user=user) | Q(email=user.email)
+        ).distinct()
+
+        # Active bookings: Pending or Confirmed
+        reservations = qs.filter(
+            status__in=['Pending', 'Confirmed']
+        ).order_by('-created_at')
+
+        # History: Completed, Cancelled, or Rejected
+        history = qs.filter(
+            status__in=['Completed', 'Cancelled', 'Rejected']
+        ).order_by('-created_at')
+
+        return JsonResponse({
+            "status":       "success",
+            "reservations": [_booking_to_dict(b) for b in reservations],
+            "history":      [_booking_to_dict(b) for b in history],
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
 # =========================
 # API - GET ALL ROOMS
 # =========================
 @csrf_exempt
 def api_get_rooms(request):
-    if request.method == "GET":
-        try:
-            rooms = Room.objects.all()
-            room_list = []
-            for room in rooms:
-                room_list.append({
-                    "id": room.id,
-                    "room_type": room.room_type,
-                    "price": str(room.price),
-                    "max_guests": room.max_guests,
-                    "amenities": room.amenities,
-                    "details": room.details,
-                    "is_available": room.is_available,
-                    "image": f"/media/{room.image}" if room.image else None,
-                    "created_at": room.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                })
-            return JsonResponse({"status": "success", "rooms": room_list})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "Invalid method"})
+    if request.method != "GET":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        return JsonResponse({"status": "success", "rooms": [_room_to_dict(r) for r in Room.objects.all()]})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
 
 
 # =========================
@@ -393,29 +595,15 @@ def api_get_rooms(request):
 # =========================
 @csrf_exempt
 def api_get_room(request, room_id):
-    if request.method == "GET":
-        try:
-            room = get_object_or_404(Room, id=room_id)
-            gallery = [f"/media/{img.image}" for img in room.gallery.all()]
-            return JsonResponse({
-                "status": "success",
-                "room": {
-                    "id": room.id,
-                    "room_type": room.room_type,
-                    "price": str(room.price),
-                    "max_guests": room.max_guests,
-                    "amenities": room.amenities,
-                    "details": room.details,
-                    "is_available": room.is_available,
-                    "image": f"/media/{room.image}" if room.image else None,
-                    "gallery": gallery,
-                    "created_at": room.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                }
-            })
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "Invalid method"})
+    if request.method != "GET":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        room = get_object_or_404(Room, id=room_id)
+        data = _room_to_dict(room)
+        data["gallery"] = [f"/media/{img.image}" for img in room.gallery.all()]
+        return JsonResponse({"status": "success", "room": data})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
 
 
 # =========================
@@ -423,26 +611,21 @@ def api_get_room(request, room_id):
 # =========================
 @csrf_exempt
 def api_add_room(request):
-    if request.method == "POST":
-        try:
-            room = Room.objects.create(
-                room_type=request.POST.get("room_type"),
-                price=request.POST.get("price"),
-                max_guests=request.POST.get("max_guests", 1),
-                amenities=request.POST.get("amenities", ""),
-                details=request.POST.get("details", ""),
-                image=request.FILES.get("image"),
-                is_available=True
-            )
-            return JsonResponse({
-                "status": "success",
-                "message": "Room added successfully",
-                "room_id": room.id
-            })
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "Invalid method"})
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        room = Room.objects.create(
+            room_type    = request.POST.get("room_type"),
+            price        = request.POST.get("price"),
+            max_guests   = request.POST.get("max_guests", 1),
+            amenities    = request.POST.get("amenities", ""),
+            details      = request.POST.get("details", ""),
+            image        = request.FILES.get("image"),
+            is_available = True,
+        )
+        return JsonResponse({"status": "success", "message": "Room added", "room_id": room.id})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
 
 
 # =========================
@@ -450,22 +633,21 @@ def api_add_room(request):
 # =========================
 @csrf_exempt
 def api_edit_room(request, room_id):
-    if request.method == "POST":
-        try:
-            room = get_object_or_404(Room, id=room_id)
-            room.room_type  = request.POST.get("room_type", room.room_type)
-            room.price      = request.POST.get("price", room.price)
-            room.max_guests = request.POST.get("max_guests", room.max_guests)
-            room.amenities  = request.POST.get("amenities", room.amenities)
-            room.details    = request.POST.get("details", room.details)
-            if request.FILES.get("image"):
-                room.image = request.FILES.get("image")
-            room.save()
-            return JsonResponse({"status": "success", "message": "Room updated successfully"})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "Invalid method"})
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        room            = get_object_or_404(Room, id=room_id)
+        room.room_type  = request.POST.get("room_type",  room.room_type)
+        room.price      = request.POST.get("price",      room.price)
+        room.max_guests = request.POST.get("max_guests", room.max_guests)
+        room.amenities  = request.POST.get("amenities",  room.amenities)
+        room.details    = request.POST.get("details",    room.details)
+        if request.FILES.get("image"):
+            room.image = request.FILES["image"]
+        room.save()
+        return JsonResponse({"status": "success", "message": "Room updated"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
 
 
 # =========================
@@ -473,15 +655,14 @@ def api_edit_room(request, room_id):
 # =========================
 @csrf_exempt
 def api_delete_room(request, room_id):
-    if request.method == "DELETE":
-        try:
-            room = get_object_or_404(Room, id=room_id)
-            room.delete()
-            return JsonResponse({"status": "success", "message": "Room deleted successfully"})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "Invalid method"})
+    if request.method != "DELETE":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        room = get_object_or_404(Room, id=room_id)
+        room.delete()
+        return JsonResponse({"status": "success", "message": "Room deleted"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
 
 
 # =========================
@@ -489,20 +670,15 @@ def api_delete_room(request, room_id):
 # =========================
 @csrf_exempt
 def api_toggle_room_status(request, room_id):
-    if request.method == "POST":
-        try:
-            room = get_object_or_404(Room, id=room_id)
-            room.is_available = not room.is_available
-            room.save()
-            return JsonResponse({
-                "status": "success",
-                "message": "Status updated",
-                "is_available": room.is_available
-            })
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "Invalid method"})
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        room              = get_object_or_404(Room, id=room_id)
+        room.is_available = not room.is_available
+        room.save()
+        return JsonResponse({"status": "success", "is_available": room.is_available})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
 
 
 # =========================
@@ -510,32 +686,24 @@ def api_toggle_room_status(request, room_id):
 # =========================
 @csrf_exempt
 def book_room(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"})
+    try:
+        data = json.loads(request.body)
+        user = get_user_from_token(request)  # optional — links booking if logged in
 
-            room_prices = {
-                "single": 2000, "twin": 3200, "standard": 3900,
-                "family": 5000, "deluxe": 5500, "suite": 7000,
-                "superior": 8500, "executive": 10000, "seaview": 12500, "penthouse": 20000,
-            }
-
-            room_name = (data.get("room") or "").lower().replace(" room", "").strip()
-            price = room_prices.get(room_name, 0)
-
-            Booking.objects.create(
-                room=data.get("room"),
-                full_name=data.get("full_name"),
-                contact_number=data.get("contact_number"),
-                email=data.get("email"),
-                check_in_date=data.get("check_in_date"),
-                check_out_date=data.get("check_out_date"),
-                guests=data.get("guests"),
-                price=price,
-                status='Pending'
-            )
-            return JsonResponse({"status": "success", "message": "Booking saved successfully"})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)})
-
-    return JsonResponse({"status": "error", "message": "Invalid method"})
+        Booking.objects.create(
+            user           = user,
+            room           = data.get("room"),
+            full_name      = data.get("full_name"),
+            contact_number = data.get("contact_number"),
+            email          = data.get("email"),
+            check_in_date  = data.get("check_in_date"),
+            check_out_date = data.get("check_out_date"),
+            guests         = data.get("guests"),
+            price          = data.get("price"),
+            status         = 'Pending',
+        )
+        return JsonResponse({"status": "success", "message": "Booking saved successfully"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)})
