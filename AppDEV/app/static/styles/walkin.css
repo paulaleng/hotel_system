@@ -1,0 +1,280 @@
+/* ===== RESET ===== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
+}
+
+/* ===== BODY ===== */
+
+body{
+    background:#0f172a;
+    color:#f1f5f9;
+    overflow-x:hidden;
+}
+
+/* ===== LAYOUT ===== */
+
+.container{
+    display:flex;
+    position:relative;
+}
+
+/* ===== FIXED SIDEBAR ===== */
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:240px;
+    height:100vh;
+    background:#020617;
+    padding:20px;
+    overflow:hidden; /* prevents sidebar scrolling */
+    z-index:100;
+}
+
+/* ===== MAIN ===== */
+
+.main-content{
+    margin-left:240px;
+    padding:30px;
+    width:calc(100% - 240px);
+    min-height:100vh;
+}
+
+/* ===== HEADER ===== */
+
+.top-section{
+    margin-bottom:25px;
+}
+
+.top-section h1{
+    font-size:30px;
+    font-weight:700;
+    color:#ffffff;
+}
+
+.top-section p{
+    color:#94a3b8;
+    margin-top:6px;
+}
+
+/* ===== LAYOUT ===== */
+
+.booking-layout{
+    display:grid;
+    grid-template-columns:420px 1fr;
+    gap:25px;
+    align-items:start;
+}
+
+/* ===== CARDS ===== */
+
+.booking-card,
+.room-preview{
+    background:#1e293b;
+    border-radius:18px;
+    padding:25px;
+    border:1px solid #334155;
+}
+
+/* ===== FORM ===== */
+
+.booking-card h2{
+    margin-bottom:20px;
+    color:#ffffff;
+}
+
+.form-group{
+    margin-bottom:18px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:6px;
+    font-size:13px;
+    color:#94a3b8;
+}
+
+.form-group input,
+.form-group select{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #334155;
+    background:#020617;
+    color:#f1f5f9;
+    outline:none;
+    transition:0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus{
+    border-color:#d4af37;
+}
+
+/* ===== PRICE BOX ===== */
+
+.price-box{
+    background:#0f172a;
+    border:1px solid #334155;
+    padding:18px;
+    border-radius:14px;
+    margin-top:10px;
+    margin-bottom:20px;
+}
+
+.price-box span{
+    color:#94a3b8;
+    font-size:13px;
+}
+
+.price-box h2{
+    margin-top:8px;
+    color:#d4af37;
+    font-size:28px;
+}
+
+/* ===== BUTTON ===== */
+
+.submit-btn{
+    width:100%;
+    background:#d4af37;
+    color:#020617;
+    border:none;
+    padding:14px;
+    border-radius:10px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.submit-btn:hover{
+    opacity:0.9;
+}
+
+/* ===== ROOM PREVIEW ===== */
+
+.room-image-container{
+    width:100%;
+    height:320px;
+    border-radius:16px;
+    overflow:hidden;
+    background:#0f172a;
+    border:1px solid #334155;
+}
+
+.room-image-container img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* ===== ROOM INFO ===== */
+
+.room-info{
+    margin-top:25px;
+}
+
+.room-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.room-header h2{
+    color:#ffffff;
+    font-size:28px;
+}
+
+.available-badge{
+    background:rgba(34,197,94,0.15);
+    color:#4ade80;
+    padding:8px 14px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:600;
+}
+
+/* ===== ROOM RATE ===== */
+
+.room-price-display{
+    margin-top:20px;
+    background:#0f172a;
+    border:1px solid #334155;
+    border-radius:14px;
+    padding:20px;
+}
+
+.room-price-display span{
+    color:#94a3b8;
+    font-size:13px;
+}
+
+.room-price-display h1{
+    color:#d4af37;
+    margin-top:8px;
+    font-size:36px;
+}
+
+/* ===== INFO ===== */
+
+.info-section{
+    margin-top:25px;
+}
+
+.info-section h3{
+    margin-bottom:10px;
+    color:#ffffff;
+}
+
+.info-section p{
+    color:#cbd5e1;
+    line-height:1.7;
+}
+
+/* ===== SUCCESS ===== */
+
+.success-message{
+    background:rgba(34,197,94,0.15);
+    border:1px solid rgba(34,197,94,0.3);
+    color:#4ade80;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:20px;
+}
+
+/* ===== ROOM GALLERY ===== */
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.gallery-grid img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media(max-width:1100px){
+
+    .booking-layout{
+        grid-template-columns:1fr;
+    }
+
+    .main-content{
+        width:100%;
+    }
+
+}

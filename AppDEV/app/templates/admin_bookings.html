@@ -94,19 +94,28 @@
           </div>
         </div>
 
-        <div class="actions">
+       <div class="actions">
 
-          <button class="confirm"
-            onclick="event.stopPropagation(); openConfirmModal('{{ b.id }}')">
-            Confirm
-          </button>
+  {% if b.status == "Pending" %}
 
-          <button class="remove"
-            onclick="event.stopPropagation(); openRemoveModal('{{ b.id }}')">
-            Remove
-          </button>
+    <button class="confirm"
+      onclick="event.stopPropagation(); openConfirmModal('{{ b.id }}')">
+      Confirm
+    </button>
 
-        </div>
+    <button class="remove"
+      onclick="event.stopPropagation(); openRemoveModal('{{ b.id }}')">
+      Remove
+    </button>
+
+  {% else %}
+
+    <!-- keeps alignment so layout doesn't collapse -->
+    <div style="width: 140px;"></div>
+
+  {% endif %}
+
+</div>
 
       </div>
 

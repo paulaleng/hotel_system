@@ -34,30 +34,24 @@
 
     <h3>Upcoming Reservations</h3>
 
-    {% for b in reservations %}
-    <div class="card">
-            <div class="left">
-             <div class="room">{{ b.room }}</div>
-        </div>
-
-        <div class="middle">
-            <div class="meta">{{ b.check_in_date }}</div>
-            <div class="meta">{{ b.guests }}</div>
-        </div>
-
-        <div class="right-status
-            {% if b.status == 'Pending' %} pending
-            {% elif b.status == 'Confirmed' %} upcoming
-            {% elif b.status == 'Cancelled' %} cancelled
-            {% elif b.status == 'Completed' %} past
-            {% endif %}
-        ">
-        {{ b.status }}
-        </div>
+    {% for b in pending %}
+<div class="card">
+    <div class="left">
+        <div class="room">{{ b.room }}</div>
     </div>
-    {% empty %}
-    <p>No reservations</p>
-    {% endfor %}
+
+    <div class="middle">
+        <div class="meta">{{ b.check_in_date }}</div>
+        <div class="meta">{{ b.guests }}</div>
+    </div>
+
+    <div class="right-status pending">
+        {{ b.status }}
+    </div>
+</div>
+{% empty %}
+<p>No pending reservations</p>
+{% endfor %}
 
 
 </div>
@@ -68,21 +62,28 @@
     <h3>Booking History</h3>
 
     {% for b in history %}
-    <div class="card">
-        <div class="left">
-            <div class="room">{{ b.room }}</div>
-        </div>
-
-        <div class="middle">
-            <div class="meta">{{ b.check_in_date }}</div>
-            <div class="meta">{{ b.guests }}</div>
-        </div>
-
-        <div class="right-status past">Completed</div>
+<div class="card">
+    <div class="left">
+        <div class="room">{{ b.room }}</div>
     </div>
-    {% empty %}
-    <p>No booking history</p>
-    {% endfor %}
+
+    <div class="middle">
+        <div class="meta">{{ b.check_in_date }}</div>
+        <div class="meta">{{ b.guests }}</div>
+    </div>
+
+    <div class="right-status
+        {% if b.status == 'Confirmed' %} upcoming
+        {% elif b.status == 'Cancelled' %} cancelled
+        {% elif b.status == 'Completed' %} past
+        {% endif %}
+    ">
+        {{ b.status }}
+    </div>
+</div>
+{% empty %}
+<p>No booking history</p>
+{% endfor %}
 
 </div>
 

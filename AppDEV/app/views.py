@@ -250,12 +250,11 @@ def details(request):
             for booking in bookings:
 
                 current = booking.check_in_date
+                checkout = booking.check_out_date
 
-                while current < booking.check_out_date:
+                while current < checkout:   # STRICTLY LESS THAN
 
-                    booked_dates.append(
-                        current.strftime("%Y-%m-%d")
-                    )
+                    booked_dates.append(current.strftime("%Y-%m-%d"))
 
                     current += timedelta(days=1)
 
@@ -304,6 +303,7 @@ def admin_guests(request):
 @login_required
 def admin_bookings(request):
     bookings = Booking.objects.filter(status__iexact='Pending').order_by('-created_at')
+    all_bookings = Booking.objects.all().order_by('-created_at')
 
     room_prices = {
         "single": 2000,
@@ -322,8 +322,8 @@ def admin_bookings(request):
         b.total_price = b.price
 
     return render(request, "admin_bookings.html", {
-        "bookings": bookings
-    })
+    "bookings": all_bookings
+})
 
 @login_required
 def delete_booking(request, booking_id):
@@ -524,25 +524,22 @@ def book_room(request):
 # =========================
 @login_required
 def schedule(request):
+
     user_email = request.user.email
 
-    # ✅ ALL BOOKINGS (including Pending, Confirmed, Cancelled)
-    reservations = Booking.objects.filter(
-        email=user_email
-    ).order_by('-created_at')
+    pending = Booking.objects.filter(
+        email__iexact=user_email,
+        status__iexact="pending"
+    ).order_by("-created_at")
 
-    # ✅ HISTORY (optional if completed)
     history = Booking.objects.filter(
-        email=user_email,
-        status='Completed'
-    ).order_by('-created_at')
+        email__iexact=user_email
+    ).exclude(status__iexact="pending").order_by("-created_at")
 
     return render(request, "schedule.html", {
-        "reservations": reservations,
+        "pending": pending,
         "history": history
     })
-
-
 
 
 # =========================
@@ -602,6 +599,59 @@ def previous_bookings(request):
     })
 
 def previous_bookings(request):
-    bookings = Booking.objects.filter(status="completed").order_by("-id")
+    bookings = Booking.objects.filter(status="Completed").order_by("-created_at")
     return render(request, "admin_bookings.html", {"bookings": bookings})
 
+from django.db.models import Prefetch
+
+@login_required
+def admin_walkin(request):
+
+    available_rooms = Room.objects.filter(
+        is_available=True
+    ).prefetch_related("gallery").order_by('-created_at')
+
+    if request.method == "POST":
+
+        guest_name = request.POST.get('guest_name')
+        guest_email = request.POST.get('guest_email')
+        guest_phone = request.POST.get('guest_phone')
+        guests = request.POST.get('guests')
+        room_id = request.POST.get('room')
+        check_in = request.POST.get('check_in')
+        check_out = request.POST.get('check_out')
+
+        room = get_object_or_404(Room, id=room_id)
+
+        Booking.objects.create(
+            room=room.room_type,
+            full_name=guest_name,
+            contact_number=guest_phone,
+            email=guest_email,
+            check_in_date=check_in,
+            check_out_date=check_out,
+            guests=guests,
+            price=room.price,
+            status='Confirmed'
+        )
+
+        room.is_available = False
+        room.save()
+
+        messages.success(request, "Walk-in booking successfully created.")
+        return redirect('admin_walkin')
+
+    return render(request, 'admin_walkin.html', {
+        'available_rooms': available_rooms
+    })
+
+def room_images(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+
+    images = room.gallery.all()
+
+    data = {
+        "images": [request.build_absolute_uri(img.image.url) for img in images]
+    }
+
+    return JsonResponse(data)

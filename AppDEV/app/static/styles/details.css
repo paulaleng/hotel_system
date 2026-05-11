@@ -397,7 +397,8 @@ button:hover {
    BOOKED DATES (DARK GRAY)
 ========================= */
 .flatpickr-day.booked-date {
-    color: #eb7a7a !important;
+    background: #eb7a7a !important;  /* IMPORTANT: not just color */
+    color: white !important;
     font-weight: 500;
     cursor: not-allowed !important;
 }

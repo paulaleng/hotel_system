@@ -20,6 +20,10 @@
     <li class="{% if request.resolver_match.url_name == 'admin_bookings' %}active{% endif %}">
   <a href="{% url 'admin_bookings' %}">Bookings</a>
 
+  <li class="{% if request.resolver_match.url_name == 'admin_walkin' %}active{% endif %}">
+  <a href="{% url 'admin_walkin' %}">Walk-in</a>
+</li>
+
     <li class="{% if request.resolver_match.url_name == 'admin_guests' %}active{% endif %}">
   <a href="{% url 'admin_guests' %}">Guests</a>
 </li>
