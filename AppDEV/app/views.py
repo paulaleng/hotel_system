@@ -5,6 +5,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.timezone import now
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.urls import reverse
 from .models import Booking
 from .models import UserProfile 
 from django.views.decorators.csrf import csrf_exempt
@@ -163,9 +169,13 @@ def user_login(request):
         if user is not None:
             login(request, user)
             return redirect('homepage')
+
+        if User.objects.filter(username=username, is_active=False).exists():
+            messages.error(request, "Account not activated. Please confirm your email before logging in.")
         else:
             messages.error(request, "Invalid username or password")
-            return render(request, 'login.html')
+
+        return render(request, 'login.html')
 
     return render(request, 'login.html')
 
@@ -190,16 +200,62 @@ def register(request):
                 'error': 'Username already exists'
             })
 
-        User.objects.create_user(
+        user = User.objects.create_user(
             username=username,
             email=email,
-            password=password1
+            password=password1,
+            is_active=False
         )
 
-        messages.success(request, "Account created successfully. Please login.")
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        confirm_path = reverse('confirm_register', kwargs={'uidb64': uid, 'token': token})
+        confirm_url = request.build_absolute_uri(confirm_path)
+
+        subject = 'Confirm your hotel account'
+        message = (
+            f"Hi {username},\n\n"
+            "Thanks for registering at Grand Solace Hotel.\n"
+            "Please confirm that this registration was made by you by clicking the link below:\n\n"
+            f"{confirm_url}\n\n"
+            "If you did not register, you can ignore this email.\n\n"
+            "Best regards,\n"
+            "Grand Solace Hotel"
+        )
+
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            messages.success(request, "Account created. A confirmation email has been sent.")
+        except Exception as e:
+            messages.error(request, f"Account created but confirmation email failed: {e}")
+
         return redirect('login')
 
     return render(request, 'register.html')
+
+
+def confirm_register(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, "Your email is confirmed. You can now log in.")
+        return redirect('login')
+
+    return render(request, 'register_confirm.html', {
+        'error': 'The confirmation link is invalid or has expired.'
+    })
 
 
 # =========================
@@ -468,7 +524,7 @@ def room_details(request):
         total_price = price * nights
 
         Booking.objects.create(
-         room=room,
+        room=room,
         full_name=name,
         contact_number=contact,
         email=email,
@@ -520,7 +576,7 @@ def book_room(request):
 
             Booking.objects.create(
                 user=request.user,
-                room = Room.objects.get(id=data.get("room_id")),
+                room=room_obj.room_type,
                 full_name=data.get("full_name"),
                 contact_number=data.get("contact_number"),
                 email=data.get("email"),
@@ -712,6 +768,9 @@ def room_booked_dates(request, room_id):
 @login_required
 def checkout_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
+    booking.status = "Completed"
+    booking.save()
+    return redirect("admin_bookings")
     booking.status = "Completed"
     booking.save()
     return redirect("admin_bookings")

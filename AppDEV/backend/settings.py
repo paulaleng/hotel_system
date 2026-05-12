@@ -2,6 +2,7 @@
 Django settings for backend project.
 """
 
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -127,6 +128,15 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ] if (BASE_DIR / "static").exists() else []
+
+# Email settings for registration confirmation
+EMAIL_HOST_USER = os.getenv('gotenamita01@gmail.com', '')
+EMAIL_HOST_PASSWORD = os.getenv('lhvj isrw nwlr usen', '')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD else 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no-reply@hotel.com')
 
 CORS_ALLOW_ALL_ORIGINS = True
 
