@@ -12,6 +12,25 @@
 
 <link rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+
+/* OCCUPIED DATES */
+.flatpickr-day.booked-date {
+    background: #ff4d4d !important;
+    border-color: #ff4d4d !important;
+    color: white !important;
+    border-radius: 6px;
+}
+
+/* CHECKOUT BOUNDARY DATE */
+.flatpickr-day.checkout-boundary {
+    background: #f5a623 !important;
+    border-color: #f5a623 !important;
+    color: white !important;
+    border-radius: 6px;
+}
+
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
@@ -238,35 +257,139 @@ href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <!-- FLATPICKR -->
 <script>
 
-const bookedDates = new Set(JSON.parse('{{ booked_dates_json|escapejs }}'));
+/*
+ * bookedDates = array of "YYYY-MM-DD" strings from backend.
+ * Each date in this array represents a night that is OCCUPIED
+ * (check_in_date up to, but NOT including, check_out_date).
+ *
+ * RULE:
+ *   Check-in  calendar → disable ALL bookedDates
+ *                         (guest cannot start their stay on an occupied night)
+ *
+ *   Check-out calendar → disable bookedDates EXCEPT the very first
+ *                         booked date that comes AFTER the chosen check-in.
+ *                         That first date is a valid checkout (guest checks out
+ *                         before the next guest checks in).
+ */
 
-</script>
-
-<script>
+const bookedDates = new Set(
+    JSON.parse('{{ booked_dates_json|escapejs }}')
+);
 
 let checkIn;
 let checkOut;
 
-/* =========================
-   CHECK OUT FIRST (IMPORTANT)
-========================= */
+/* =========================================
+   HELPERS
+========================================= */
+
+/**
+ * Format a JS Date to "YYYY-MM-DD" using LOCAL time
+ * (avoids the UTC-shift bug with toISOString).
+ */
+function toLocal(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+/**
+ * Is `dateStr` (YYYY-MM-DD) a booked night?
+ */
+function isBooked(dateStr) {
+    return bookedDates.has(dateStr);
+}
+
+/**
+ * Given a check-in date string, find the first booked date
+ * strictly AFTER the check-in. That date is the earliest
+ * valid checkout (the guest must leave before the next
+ * booking starts its first night).
+ *
+ * Returns the date string or null if none found.
+ */
+function firstBookedAfter(checkInStr) {
+    // Collect all booked dates, sort them, return the first > checkInStr
+    const sorted = Array.from(bookedDates).sort();
+    for (const d of sorted) {
+        if (d > checkInStr) return d;
+    }
+    return null;
+}
+
+
+/* =========================================
+   CHECK OUT CALENDAR
+========================================= */
 checkOut = flatpickr("#checkOutDate", {
+
     minDate: "today",
     dateFormat: "Y-m-d",
+
+    /*
+     * Disable logic for checkout:
+     *   - Disable a date if it is booked AND it is NOT the
+     *     "first booked date after check-in" (the allowed checkout boundary).
+     *   - We re-evaluate this dynamically in onChange of check-in.
+     */
+    disable: [
+        function(date) {
+            const dateStr = toLocal(date);
+            const checkInValue = document.getElementById("datePicker").value;
+
+            if (!checkInValue) {
+                // No check-in chosen yet — block all booked dates
+                return isBooked(dateStr);
+            }
+
+            const boundary = firstBookedAfter(checkInValue);
+
+            // Allow the boundary date (checkout on that day is fine)
+            if (boundary && dateStr === boundary) return false;
+
+            // Block dates that are in the booked range
+            // and also block dates AFTER the boundary (they belong to next booking)
+            if (boundary && dateStr > boundary) return true;
+
+            return isBooked(dateStr);
+        }
+    ],
+
+    onDayCreate: function(dObj, dStr, fp, dayElem) {
+
+    const dateStr = toLocal(dayElem.dateObj);
+    const checkInValue = document.getElementById("datePicker").value;
+    const boundary = checkInValue ? firstBookedAfter(checkInValue) : null;
+
+    if (isBooked(dateStr)) {
+
+        if (boundary && dateStr === boundary) {
+
+            dayElem.classList.add("checkout-boundary");
+            dayElem.title =
+                "Checkout available (next booking starts here)";
+
+        } else {
+
+            dayElem.classList.add("booked-date");
+        }
+    }
+},
 
     onChange: function(selectedDates) {
 
         const checkInValue = document.getElementById("datePicker").value;
 
-        if (selectedDates.length && checkInValue) {
+        if (!selectedDates.length || !checkInValue) return;
 
-            const selected = new Date(selectedDates[0]);
-            const checkInDate = new Date(checkInValue);
+        const checkInDate  = new Date(checkInValue);
+        const checkOutDate = selectedDates[0];
 
-            if (selected <= checkInDate) {
-                alert("Check-out must be after check-in");
-                this.clear();
-            }
+        if (checkOutDate <= checkInDate) {
+            alert("Check-out must be after check-in");
+            checkOut.clear();
+            return;
         }
 
         calculateTotal();
@@ -274,120 +397,116 @@ checkOut = flatpickr("#checkOutDate", {
 });
 
 
-/* =========================
-   CHECK IN
-========================= */
+/* =========================================
+   CHECK IN CALENDAR
+========================================= */
 checkIn = flatpickr("#datePicker", {
 
     minDate: "today",
     dateFormat: "Y-m-d",
 
+    /*
+     * Disable ALL booked nights for check-in.
+     * A guest cannot start their stay on a night already occupied.
+     */
     disable: [
         function(date) {
-
-            const formatted = date.toISOString().split("T")[0];
-
-            // 🔥 KEY FIX:
-            // Only block TRUE check-in collisions,
-            // NOT checkout boundary dates
-
-            return bookedDates.has(formatted);
+            return isBooked(toLocal(date));
         }
     ],
 
     onDayCreate: function(dObj, dStr, fp, dayElem) {
 
-        const date = dayElem.dateObj;
-        const formatted = date.toISOString().split("T")[0];
+    const dateStr = toLocal(dayElem.dateObj);
 
-        if (bookedDates.has(formatted)) {
-
-            // 🔴 VISUAL ONLY (occupied nights)
-            dayElem.style.background = "#eb7a7a";
-            dayElem.style.color = "white";
-        }
-    },
+    if (isBooked(dateStr)) {
+        dayElem.classList.add("booked-date");
+    }
+},
 
     onChange: function(selectedDates) {
 
         if (!selectedDates.length) return;
 
-        const checkInDate = selectedDates[0];
+        const selectedDate = selectedDates[0];
+        const selectedStr  = toLocal(selectedDate);
 
-        checkOut.set("minDate", checkInDate);
+        // Clear any previous checkout when check-in changes
+        checkOut.clear();
 
-        let nextDay = new Date(checkInDate);
+        // Set checkout minDate to the day after check-in
+        let nextDay = new Date(selectedDate);
         nextDay.setDate(nextDay.getDate() + 1);
+        checkOut.set("minDate", nextDay);
 
-        setTimeout(() => {
-            checkOut.setDate(nextDay, false);
-            calculateTotal();
-        }, 80);
+        /*
+         * Re-apply the disable function so the checkout calendar
+         * knows the new check-in boundary.
+         * Flatpickr re-evaluates disable on redraw; we just need
+         * to force a redraw by setting minDate (done above).
+         * Also update the disable array explicitly to capture closure.
+         */
+        checkOut.set("disable", [
+            function(date) {
+                const dateStr = toLocal(date);
+                const boundary = firstBookedAfter(selectedStr);
+
+                if (boundary && dateStr === boundary) return false; // allow checkout here
+                if (boundary && dateStr > boundary) return true;    // after boundary → block
+                return isBooked(dateStr);                           // booked night → block
+            }
+        ]);
+
+        // Auto-select next day as default checkout
+        checkOut.setDate(nextDay);
+
+        calculateTotal();
     }
 });
 
-</script>
 
-<script>
-
-/* =========================
-   TOTAL CALCULATION
-========================= */
-
+/* =========================================
+   TOTAL PRICE
+========================================= */
 function getNights() {
 
-    const startValue =
-        document.getElementById("datePicker").value;
-
-    const endValue =
-        document.getElementById("checkOutDate").value;
+    const startValue = document.getElementById("datePicker").value;
+    const endValue   = document.getElementById("checkOutDate").value;
 
     if (!startValue || !endValue) return 0;
 
     const start = new Date(startValue);
-    const end = new Date(endValue);
-
-    if (isNaN(start) || isNaN(end)) return 0;
+    const end   = new Date(endValue);
 
     const diffTime = end - start;
+    const nights   = diffTime / (1000 * 60 * 60 * 24);
 
-    const days =
-        diffTime / (1000 * 60 * 60 * 24);
-
-    return days > 0 ? days : 0;
+    return nights > 0 ? nights : 0;
 }
+
 
 function calculateTotal() {
 
-    const price =
-        Number("{{ room.price|default:0 }}");
-
-    const nights =
-        getNights();
+    const price  = Number("{{ room.price|default:0 }}");
+    const nights = getNights();
 
     if (!nights) {
-
-        document.getElementById("totalPrice").innerText =
-            "₱0";
-
+        document.getElementById("totalPrice").innerText = "₱0";
         return 0;
     }
 
-    const total =
-        price * nights;
+    const total = price * nights;
 
     document.getElementById("totalPrice").innerText =
-        "₱" + total.toLocaleString() +
-        " (" + nights + " nights)";
+        "₱" + total.toLocaleString() + " (" + nights + " nights)";
 
     return total;
 }
 
 
-/* =========================
-   BOOKING FUNCTION
-========================= */
-
+/* =========================================
+   BOOK NOW
+========================================= */
 function bookNow(event) {
 
     event.preventDefault();
@@ -453,6 +572,5 @@ function bookNow(event) {
 }
 
 </script>
-
 </body>
 </html>

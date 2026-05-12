@@ -206,15 +206,24 @@ def register(request):
 # ROOMS PAGE (GUEST SIDE)
 # =========================
 def rooms(request):
-    room_list = Room.objects.filter(is_available=True)
+
+    # Show all rooms
+    # Availability is controlled by booked dates,
+    # not by the is_available boolean
+    room_list = Room.objects.all().order_by('-created_at')
 
     for room in room_list:
+
         if room.amenities:
-            room.amenities_list = [a.strip() for a in room.amenities.split(",")]
+            room.amenities_list = [
+                a.strip() for a in room.amenities.split(",")
+            ]
         else:
             room.amenities_list = []
 
-    return render(request, 'rooms.html', {'rooms': room_list})
+    return render(request, 'rooms.html', {
+        'rooms': room_list
+    })
 
 
 # =========================
@@ -235,28 +244,34 @@ def details(request):
 
         # Amenities
         if room and room.amenities:
-            room.amenities_list = [a.strip() for a in room.amenities.split(",")]
+            room.amenities_list = [
+                a.strip() for a in room.amenities.split(",")
+            ]
         else:
             room.amenities_list = []
 
-        # GET BOOKINGS
+        # GET CONFIRMED BOOKINGS
+        # GET CONFIRMED BOOKINGS
         if room:
-
             bookings = Booking.objects.filter(
-                room=room,
-                status__iexact='Confirmed'
+        room=room.room_type,
+        status__iexact='Confirmed'
+    )
+
+    for booking in bookings:
+
+        current = booking.check_in_date
+
+        # EXCLUDE checkout date
+        last_night = booking.check_out_date - timedelta(days=1)
+
+        while current <= last_night:
+
+            booked_dates.append(
+                current.strftime("%Y-%m-%d")
             )
 
-            for booking in bookings:
-
-                current = booking.check_in_date
-                checkout = booking.check_out_date
-
-                while current < checkout:   # STRICTLY LESS THAN
-
-                    booked_dates.append(current.strftime("%Y-%m-%d"))
-
-                    current += timedelta(days=1)
+            current += timedelta(days=1)
 
     return render(request, 'details.html', {
         'room': room,
@@ -607,19 +622,19 @@ from django.db.models import Prefetch
 @login_required
 def admin_walkin(request):
 
-    available_rooms = Room.objects.filter(
-        is_available=True
-    ).prefetch_related("gallery").order_by('-created_at')
+    # Show ALL rooms — availability is handled by the calendar's booked dates,
+    # not by a boolean flag. A room with future bookings is still selectable
+    # for other date ranges.
+    available_rooms = Room.objects.all().prefetch_related("gallery").order_by('-created_at')
 
     if request.method == "POST":
-
-        guest_name = request.POST.get('guest_name')
+        guest_name  = request.POST.get('guest_name')
         guest_email = request.POST.get('guest_email')
         guest_phone = request.POST.get('guest_phone')
-        guests = request.POST.get('guests')
-        room_id = request.POST.get('room')
-        check_in = request.POST.get('check_in')
-        check_out = request.POST.get('check_out')
+        guests      = request.POST.get('guests')
+        room_id     = request.POST.get('room')
+        check_in    = request.POST.get('check_in')
+        check_out   = request.POST.get('check_out')
 
         room = get_object_or_404(Room, id=room_id)
 
@@ -634,9 +649,6 @@ def admin_walkin(request):
             price=room.price,
             status='Confirmed'
         )
-
-        room.is_available = False
-        room.save()
 
         messages.success(request, "Walk-in booking successfully created.")
         return redirect('admin_walkin')
@@ -655,3 +667,19 @@ def room_images(request, room_id):
     }
 
     return JsonResponse(data)
+
+
+def room_booked_dates(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    bookings = Booking.objects.filter(
+        room=room.room_type,
+        status__iexact='Confirmed'
+    )
+    booked_dates = []
+    for booking in bookings:
+        current = booking.check_in_date
+        last_night = booking.check_out_date - timedelta(days=1)
+        while current <= last_night:
+            booked_dates.append(current.strftime("%Y-%m-%d"))
+            current += timedelta(days=1)
+    return JsonResponse({"booked_dates": booked_dates})

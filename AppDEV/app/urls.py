@@ -40,6 +40,7 @@ urlpatterns = [
     path('dashboard/bookings/reject/<int:booking_id>/', views.reject_booking, name='reject_booking'),
     path('dashboard/walkin/', views.admin_walkin, name='admin_walkin'),
     path('api/room-images/<int:room_id>/', views.room_images, name='room_images'),
+    path('api/room-booked-dates/<int:room_id>/', views.room_booked_dates, name='room_booked_dates'),
     
 ]
     

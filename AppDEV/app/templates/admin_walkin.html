@@ -89,12 +89,12 @@
                     <!-- CALENDAR -->
                     <div class="form-group">
                         <label>Check In</label>
-                        <input type="text" name="check_in" id="check_in" required>
+                        <input type="text" name="check_in" id="check_in" required placeholder="Select check-in date">
                     </div>
 
                     <div class="form-group">
                         <label>Check Out</label>
-                        <input type="text" name="check_out" id="check_out" required>
+                        <input type="text" name="check_out" id="check_out" required placeholder="Select check-out date">
                     </div>
 
                     <!-- ONLY TOTAL PRICE (FIXED) -->
@@ -155,94 +155,267 @@
 </div>
 
 <script>
-const roomSelect = document.getElementById('room-select');
 
-const roomTitle = document.getElementById('room-title');
-const displayPrice = document.getElementById('display-price');
-
+/* =========================================
+   ELEMENTS
+========================================= */
+const roomSelect      = document.getElementById('room-select');
+const roomTitle       = document.getElementById('room-title');
+const displayPrice    = document.getElementById('display-price');
 const roomDescription = document.getElementById('room-description');
-const roomAmenities = document.getElementById('room-amenities');
+const roomAmenities   = document.getElementById('room-amenities');
+const roomImage       = document.getElementById('room-image');
+const galleryGrid     = document.getElementById('gallery-grid');
+const checkInEl       = document.getElementById("check_in");
+const checkOutEl      = document.getElementById("check_out");
+const totalPriceEl    = document.getElementById("total-price");
 
-const roomImage = document.getElementById('room-image');
-const galleryGrid = document.getElementById('gallery-grid');
+let roomRate    = 0;
+let bookedDates = new Set(); // filled when a room is selected
+let checkInFp;               // flatpickr instance – check in
+let checkOutFp;              // flatpickr instance – check out
 
-const checkIn = document.getElementById("check_in");
-const checkOut = document.getElementById("check_out");
-const totalPriceEl = document.getElementById("total-price");
 
-let roomRate = 0;
+/* =========================================
+   HELPERS  (same as details.html)
+========================================= */
 
-// calendar
-flatpickr("#check_in", {
-    dateFormat: "Y-m-d",
-    minDate: "today"
-});
+/** Format a JS Date to "YYYY-MM-DD" using LOCAL time (avoids UTC-shift bug). */
+function toLocal(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
 
-flatpickr("#check_out", {
-    dateFormat: "Y-m-d",
-    minDate: "today"
-});
+/** Is dateStr (YYYY-MM-DD) a booked night? */
+function isBooked(dateStr) {
+    return bookedDates.has(dateStr);
+}
 
-// room select
-roomSelect.addEventListener('change', function () {
+/**
+ * First booked night strictly AFTER checkInStr.
+ * That date is the valid checkout boundary — the guest
+ * must leave before the next booking's first night.
+ */
+function firstBookedAfter(checkInStr) {
+    const sorted = Array.from(bookedDates).sort();
+    for (const d of sorted) {
+        if (d > checkInStr) return d;
+    }
+    return null;
+}
 
-    const selected = this.options[this.selectedIndex];
 
-    roomRate = Number(selected.dataset.price || 0);
+/* =========================================
+   BUILD / REBUILD FLATPICKR INSTANCES
+   Called once at load, then again whenever
+   the room changes (booked dates refresh).
+========================================= */
+function buildCalendars() {
 
-    roomTitle.innerText = selected.dataset.name;
-    displayPrice.innerText = "₱" + Number(roomRate).toLocaleString();
+    // ── Destroy old instances if they exist ──
+    if (checkInFp)  { checkInFp.destroy();  checkInEl.value  = ""; }
+    if (checkOutFp) { checkOutFp.destroy(); checkOutEl.value = ""; }
+    totalPriceEl.innerText = "₱0";
 
-    roomDescription.innerText = selected.dataset.details;
-    roomAmenities.innerText = selected.dataset.amenities;
+    /* ---------- CHECK OUT ---------- */
+    checkOutFp = flatpickr("#check_out", {
 
-    updateTotal();
+        minDate:    "today",
+        dateFormat: "Y-m-d",
 
-    galleryGrid.innerHTML = "";
+        disable: [
+            function(date) {
+                const dateStr    = toLocal(date);
+                const checkInVal = checkInEl.value;
 
-    fetch(`/api/room-images/${selected.value}/`)
-        .then(res => res.json())
-        .then(data => {
+                if (!checkInVal) return isBooked(dateStr);
 
-            if (data.images.length > 0) {
-                roomImage.src = data.images[0];
+                const boundary = firstBookedAfter(checkInVal);
 
-                data.images.forEach(img => {
-                    galleryGrid.innerHTML += `<img src="${img}">`;
-                });
+                if (boundary && dateStr === boundary) return false; // allow checkout here
+                if (boundary && dateStr >  boundary) return true;   // after boundary → block
+                return isBooked(dateStr);
+            }
+        ],
 
-            } else {
-                roomImage.src = "";
-                galleryGrid.innerHTML = "<p>No images available</p>";
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+            const dateStr    = toLocal(dayElem.dateObj);
+            const checkInVal = checkInEl.value;
+            const boundary   = checkInVal ? firstBookedAfter(checkInVal) : null;
+
+            if (isBooked(dateStr)) {
+                if (boundary && dateStr === boundary) {
+                    // Valid checkout boundary → orange
+                    dayElem.style.backgroundColor = "#f5a623";
+                    dayElem.style.color           = "white";
+                    dayElem.style.borderRadius    = "6px";
+                    dayElem.title = "Checkout available – next booking starts here";
+                } else {
+                    // Occupied night → red
+                    dayElem.style.backgroundColor = "#ff4d4d";
+                    dayElem.style.color           = "white";
+                    dayElem.style.borderRadius    = "6px";
+                }
+            }
+        },
+
+        onChange: function(selectedDates) {
+            const checkInVal = checkInEl.value;
+            if (!selectedDates.length || !checkInVal) return;
+
+            const checkInDate  = new Date(checkInVal);
+            const checkOutDate = selectedDates[0];
+
+            if (checkOutDate <= checkInDate) {
+                alert("Check-out must be after check-in");
+                checkOutFp.clear();
+                return;
             }
 
-        });
+            updateTotal();
+        }
+    });
 
-});
 
-// calculate total
+    /* ---------- CHECK IN ---------- */
+    checkInFp = flatpickr("#check_in", {
+
+        minDate:    "today",
+        dateFormat: "Y-m-d",
+
+        // Block ALL booked nights for check-in
+        disable: [
+            function(date) {
+                return isBooked(toLocal(date));
+            }
+        ],
+
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+            if (isBooked(toLocal(dayElem.dateObj))) {
+                dayElem.style.backgroundColor = "#ff4d4d";
+                dayElem.style.color           = "white";
+                dayElem.style.borderRadius    = "6px";
+            }
+        },
+
+        onChange: function(selectedDates) {
+            if (!selectedDates.length) return;
+
+            const selectedDate = selectedDates[0];
+            const selectedStr  = toLocal(selectedDate);
+
+            // Clear previous checkout when check-in changes
+            checkOutFp.clear();
+
+            // Set checkout minDate to the day after check-in
+            let nextDay = new Date(selectedDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            checkOutFp.set("minDate", nextDay);
+
+            // Re-apply disable with updated boundary
+            checkOutFp.set("disable", [
+                function(date) {
+                    const dateStr  = toLocal(date);
+                    const boundary = firstBookedAfter(selectedStr);
+
+                    if (boundary && dateStr === boundary) return false;
+                    if (boundary && dateStr >  boundary) return true;
+                    return isBooked(dateStr);
+                }
+            ]);
+
+            // Auto-select next day as default checkout
+            checkOutFp.setDate(nextDay);
+
+            updateTotal();
+        }
+    });
+}
+
+
+/* =========================================
+   TOTAL PRICE
+========================================= */
 function updateTotal() {
 
-    if (!checkIn.value || !checkOut.value || roomRate === 0) {
+    const checkInVal  = checkInEl.value;
+    const checkOutVal = checkOutEl.value;
+
+    if (!checkInVal || !checkOutVal || roomRate === 0) {
         totalPriceEl.innerText = "₱0";
         return;
     }
 
-    const start = new Date(checkIn.value);
-    const end = new Date(checkOut.value);
-
+    const start  = new Date(checkInVal);
+    const end    = new Date(checkOutVal);
     const nights = (end - start) / (1000 * 60 * 60 * 24);
 
     if (nights > 0) {
         const total = nights * roomRate;
-        totalPriceEl.innerText = "₱" + total.toLocaleString();
+        totalPriceEl.innerText = "₱" + total.toLocaleString() + " (" + nights + " nights)";
     } else {
         totalPriceEl.innerText = "₱0";
     }
 }
 
-checkIn.addEventListener("change", updateTotal);
-checkOut.addEventListener("change", updateTotal);
+
+/* =========================================
+   ROOM SELECT
+   1. Update room details panel
+   2. Fetch booked dates for this room
+   3. Rebuild calendars with fresh booked dates
+========================================= */
+roomSelect.addEventListener('change', function () {
+
+    const selected = this.options[this.selectedIndex];
+    const roomId   = selected.value;
+
+    if (!roomId) return;
+
+    roomRate = Number(selected.dataset.price || 0);
+
+    roomTitle.innerText       = selected.dataset.name  || "—";
+    displayPrice.innerText    = "₱" + Number(roomRate).toLocaleString();
+    roomDescription.innerText = selected.dataset.details    || "";
+    roomAmenities.innerText   = selected.dataset.amenities  || "";
+
+    galleryGrid.innerHTML = "";
+
+    // Fetch room images
+    fetch(`/api/room-images/${roomId}/`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.images && data.images.length > 0) {
+                roomImage.src = data.images[0];
+                data.images.forEach(img => {
+                    galleryGrid.innerHTML += `<img src="${img}" style="width:100%;border-radius:6px;">`;
+                });
+            } else {
+                roomImage.src         = "";
+                galleryGrid.innerHTML = "<p>No images available</p>";
+            }
+        });
+
+    // Fetch booked dates for this room, then rebuild calendars
+    fetch(`/api/room-booked-dates/${roomId}/`)
+        .then(res => res.json())
+        .then(data => {
+            bookedDates = new Set(data.booked_dates || []);
+            buildCalendars(); // rebuild with fresh booked dates
+        })
+        .catch(() => {
+            bookedDates = new Set();
+            buildCalendars();
+        });
+});
+
+
+/* =========================================
+   INITIAL CALENDAR BUILD (no room selected)
+========================================= */
+buildCalendars();
 
 </script>
 
