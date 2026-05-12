@@ -116,6 +116,9 @@ body {
 .actions {
   display: flex;
   gap: 10px;
+  min-width: 160px;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .confirm {
@@ -129,6 +132,16 @@ body {
 }
 
 .remove {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.checkout {
   background: #ef4444;
   color: white;
   border: none;
@@ -379,3 +392,17 @@ body {
 .close:hover {
   color: #fff;
 }
+
+button.checkout {
+  background: #ef4444 !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  font-family: inherit !important;
+  display: inline-block !important;
+  line-height: 1 !important;
+}
+

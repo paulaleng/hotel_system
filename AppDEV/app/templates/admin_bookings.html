@@ -61,9 +61,31 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <button class="tab active" onclick="filterBookings('pending', event)">Pending</button>
-    <button class="tab" onclick="filterBookings('confirmed', event)">Previous Bookings</button>
-  </div>
+  <button class="tab active" onclick="filterBookings('pending', event)">Pending</button>
+  <button class="tab" onclick="filterBookings('current', event)">Current Booking</button>
+  <button class="tab" onclick="filterBookings('confirmed', event)">Previous Bookings</button>
+</div>
+
+    <!-- FILTERS -->
+<div class="tabs" id="dateFilters" style="display:none; flex-wrap:wrap;">
+
+  <button class="tab active" onclick="filterByDate('all', event)">All</button>
+
+  <button class="tab" onclick="filterByDate('today', event)">Today</button>
+
+  <button class="tab" onclick="filterByDate('week', event)">This Week</button>
+
+  <button class="tab" onclick="filterByDate('month', event)">This Month</button>
+
+  <button class="tab" onclick="filterByDate('lastmonth', event)">Last Month</button>
+
+  <button class="tab" onclick="filterByDate('year', event)">This Year</button>
+
+  <button class="tab" onclick="filterByDate('lastyear', event)">Last Year</button>
+
+  <button class="tab" onclick="filterByDate('older', event)">Older</button>
+
+</div>
 
     <!-- BOOKINGS -->
     <div class="bookings">
@@ -78,8 +100,8 @@
            data-checkin="{{ b.check_in_date }}"
            data-checkout="{{ b.check_out_date }}"
            data-nights="{{ b.nights }}"
-           data-total="₱{{ b.total_price }}"
-           data-price="₱{{ b.price }}"
+           data-price="{{ b.price|default:0 }}"
+          data-total="{{ b.total_price|default:0 }}"
            data-email="{{ b.email }}"
            data-contact="{{ b.contact_number }}"
            data-guests="{{ b.guests }}">
@@ -97,22 +119,28 @@
 
   {% if b.status == "Pending" %}
 
-    <button class="confirm"
-      onclick="event.stopPropagation(); openConfirmModal('{{ b.id }}')">
-      Confirm
-    </button>
+  <button class="confirm"
+    onclick="event.stopPropagation(); openConfirmModal('{{ b.id }}')">
+    Confirm
+  </button>
 
-    <button class="remove"
-      onclick="event.stopPropagation(); openRemoveModal('{{ b.id }}')">
-      Remove
-    </button>
+  <button class="remove"
+    onclick="event.stopPropagation(); openRemoveModal('{{ b.id }}')">
+    Remove
+  </button>
 
-  {% else %}
+{% elif b.status == "Confirmed" %}
 
-    <!-- keeps alignment so layout doesn't collapse -->
-    <div style="width: 140px;"></div>
+  <button class="checkout"
+    onclick="event.stopPropagation(); checkoutBooking('{{ b.id }}')">
+    Checkout
+  </button>
 
-  {% endif %}
+{% else %}
+
+  <div style="width: 140px;"></div>
+
+{% endif %}
 
 </div>
 
@@ -139,17 +167,58 @@
     <h2>Booking Details</h2>
 
     <div class="details">
-      <div class="row"><span class="label">Room:</span><span id="mRoom"></span></div>
-      <div class="row"><span class="label">Name:</span><span id="mName"></span></div>
-      <div class="row"><span class="label">Check-in:</span><span id="mCheckIn"></span></div>
-      <div class="row"><span class="label">Check-out:</span><span id="mCheckOut"></span></div>
-      <div class="row"><span class="label">Nights:</span><span id="mNights"></span></div>
-      <div class="row"><span class="label">Total:</span><span id="mTotal"></span></div>
-      <div class="row"><span class="label">Price:</span><span id="mPrice"></span></div>
-      <div class="row"><span class="label">Email:</span><span id="mEmail"></span></div>
-      <div class="row"><span class="label">Contact:</span><span id="mContact"></span></div>
-      <div class="row"><span class="label">Guests:</span><span id="mGuests"></span></div>
-    </div>
+
+  <div class="row">
+    <span class="label">Room:</span>
+    <span id="mRoom"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Name:</span>
+    <span id="mName"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Guests:</span>
+    <span id="mGuests"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Contact:</span>
+    <span id="mContact"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Email:</span>
+    <span id="mEmail"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Nights:</span>
+    <span id="mNights"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Check-in:</span>
+    <span id="mCheckIn"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Check-out:</span>
+    <span id="mCheckOut"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Room Price:</span>
+    <span id="mPrice"></span>
+  </div>
+
+  <div class="row">
+    <span class="label">Total Price:</span>
+    <span id="mTotal"></span>
+  </div>
+
+</div>
 
   </div>
 </div>
@@ -189,6 +258,7 @@
 <script>
 
 let selectedBookingId = null;
+let currentFilter = "pending"; // tracks active tab
 
 /* CARD DETAILS */
 function openModal(card) {
@@ -197,7 +267,10 @@ function openModal(card) {
   document.getElementById("mCheckIn").innerText = card.dataset.checkin;
   document.getElementById("mCheckOut").innerText = card.dataset.checkout;
   document.getElementById("mNights").innerText = card.dataset.nights;
-  document.getElementById("mTotal").innerText = card.dataset.total;
+  document.getElementById("mPrice").innerText =
+  "₱" + parseFloat(card.dataset.price || "0").toLocaleString();
+document.getElementById("mTotal").innerText =
+  "₱" + parseFloat(card.dataset.total || "0").toLocaleString();
   document.getElementById("mEmail").innerText = card.dataset.email;
   document.getElementById("mContact").innerText = card.dataset.contact;
   document.getElementById("mGuests").innerText = card.dataset.guests;
@@ -219,22 +292,148 @@ document.querySelectorAll(".booking-card").forEach(card => {
 
 /* 🔥 UPDATED FILTER LOGIC */
 function filterBookings(type, event) {
+
   const cards = document.querySelectorAll(".booking-card");
-  const tabs = document.querySelectorAll(".tab");
+  const tabs = document.querySelectorAll(".tabs:first-of-type .tab");
+  const dateFilters = document.getElementById("dateFilters");
 
   tabs.forEach(t => t.classList.remove("active"));
   event.target.classList.add("active");
 
+  const today = new Date();
+
+  // SHOW/HIDE HISTORY FILTERS
+  if (type === "confirmed") {
+    dateFilters.style.display = "flex";
+  } else {
+    dateFilters.style.display = "none";
+  }
+
   cards.forEach(card => {
+
+    const status = (card.dataset.status || "").toLowerCase();
+    const checkin = new Date(card.dataset.checkin);
+    const checkout = new Date(card.dataset.checkout);
+
+    let show = false;
+
+    // ✅ PENDING
+    if (type === "pending") {
+      show = status === "pending";
+    }
+
+    // ✅ CURRENT BOOKING (THIS IS WHAT YOU WANTED)
+    if (type === "current") {
+      show =
+        status === "confirmed" &&
+        today >= checkin &&
+        today <= checkout;
+    }
+
+    // ✅ PREVIOUS / CONFIRMED HISTORY
+    if (type === "confirmed") {
+      show = status === "confirmed";
+    }
+
+    card.style.display = show ? "flex" : "none";
+  });
+}
+
+function filterByDate(type, event) {
+
+  const tabs = document.querySelectorAll("#dateFilters .tab");
+
+  tabs.forEach(t => t.classList.remove("active"));
+
+  event.target.classList.add("active");
+
+  const cards = document.querySelectorAll(".booking-card");
+
+  const today = new Date();
+
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  cards.forEach(card => {
+
     const status = (card.dataset.status || "").toLowerCase();
 
-    if (type === "pending") {
-      card.style.display = status === "pending" ? "flex" : "none";
+    if (status !== "confirmed") {
+      card.style.display = "none";
+      return;
     }
 
-    if (type === "confirmed") {
-      card.style.display = status === "confirmed" ? "flex" : "none";
+    const checkin = new Date(card.dataset.checkin);
+
+    const bookingMonth = checkin.getMonth();
+    const bookingYear = checkin.getFullYear();
+
+    let show = false;
+
+    // ALL
+    if (type === "all") {
+      show = true;
     }
+
+    // TODAY
+    if (type === "today") {
+      show = checkin.toDateString() === today.toDateString();
+    }
+
+    // THIS WEEK
+    if (type === "week") {
+
+      const weekAgo = new Date();
+
+      weekAgo.setDate(today.getDate() - 7);
+
+      show = checkin >= weekAgo;
+    }
+
+    // THIS MONTH
+    if (type === "month") {
+
+      show =
+        bookingMonth === currentMonth &&
+        bookingYear === currentYear;
+    }
+
+    // LAST MONTH
+    if (type === "lastmonth") {
+
+      let lastMonth = currentMonth - 1;
+      let year = currentYear;
+
+      if (lastMonth < 0) {
+        lastMonth = 11;
+        year--;
+      }
+
+      show =
+        bookingMonth === lastMonth &&
+        bookingYear === year;
+    }
+
+    // THIS YEAR
+    if (type === "year") {
+
+      show = bookingYear === currentYear;
+    }
+
+    // LAST YEAR
+    if (type === "lastyear") {
+
+      show = bookingYear === currentYear - 1;
+    }
+
+    // OLDER
+    if (type === "older") {
+
+      show = bookingYear < currentYear - 1;
+    }
+
+    card.style.display = show ? "flex" : "none";
+
   });
 }
 
@@ -256,6 +455,17 @@ function openRemoveModal(id) {
 
 function submitRemove() {
   fetch("/dashboard/bookings/delete/" + selectedBookingId + "/", {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": "{{ csrf_token }}"
+    }
+  }).then(() => location.reload());
+}
+
+function checkoutBooking(id) {
+  if (!confirm("Mark this booking as checked out?")) return;
+
+  fetch("/dashboard/bookings/checkout/" + id + "/", {
     method: "POST",
     headers: {
       "X-CSRFToken": "{{ csrf_token }}"

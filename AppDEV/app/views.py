@@ -317,28 +317,31 @@ def admin_guests(request):
 
 @login_required
 def admin_bookings(request):
-    bookings = Booking.objects.filter(status__iexact='Pending').order_by('-created_at')
-    all_bookings = Booking.objects.all().order_by('-created_at')
 
-    room_prices = {
-        "single": 2000,
-        "twin": 3200,
-        "standard": 3900,
-        "family": 5000,
-        "deluxe": 5500,
-        "suite": 7000,
-        "superior": 8500,
-        "executive": 10000,
-        "seaview": 12500,
-        "penthouse": 20000,
-    }
+    bookings = Booking.objects.all().order_by('-created_at')
+
+    today = now().date()
+
+    current_bookings = Booking.objects.filter(
+        status__iexact="Confirmed",
+        check_in_date__lte=today,
+        check_out_date__gte=today
+    )
 
     for b in bookings:
-        b.total_price = b.price
+        if b.check_in_date and b.check_out_date:
+            nights = (b.check_out_date - b.check_in_date).days
+            nights = max(nights, 0)
+    else:
+        nights = 0
+
+    b.nights = nights
+    b.total_price = (b.price or 0) * nights
 
     return render(request, "admin_bookings.html", {
-    "bookings": all_bookings
-})
+        "bookings": bookings,
+        "current_bookings": current_bookings   # 🔥 NEW
+    })
 
 @login_required
 def delete_booking(request, booking_id):
@@ -429,20 +432,15 @@ def room_details(request):
 
         print(room, name, email)  # 🔥 DEBUG CHECK
 
-        room_prices = {
-            "single": 2000,
-            "twin": 3200,
-            "standard": 3900,
-            "family": 5000,
-            "deluxe": 5500,
-            "suite": 7000,
-            "superior": 8500,
-            "executive": 10000,
-            "seaview": 12500,
-            "penthouse": 20000,
-        }
+        room_obj = Room.objects.filter(
+            room_type__iexact=room
+        ).first()
 
-        price = room_prices.get(room.lower(), 0)
+        if not room_obj:
+            messages.error(request, "Room not found")
+            return redirect("rooms")
+
+        price = room_obj.price
 
         check_in = data.get("check_in_date")
         check_out = data.get("check_out_date")
@@ -460,16 +458,28 @@ def room_details(request):
                 "message": "Room is already booked for selected dates"
             })
 
+        check_in = datetime.strptime(request.POST.get("check_in_date"), "%Y-%m-%d").date()
+        check_out = datetime.strptime(request.POST.get("check_out_date"), "%Y-%m-%d").date()
+
+        nights = (check_out - check_in).days
+        if nights < 1:
+            nights = 1
+
+        total_price = price * nights
+
         Booking.objects.create(
-        room=room,
+         room=room,
         full_name=name,
         contact_number=contact,
         email=email,
-        check_in_date=date,
+        check_in_date=check_in,
+        check_out_date=check_out,
         guests=guests,
-        price=price, 
+        price=price,
+        nights=nights,
+        total_price=total_price,
         status='Pending'
-)
+        )
 
 
         messages.success(request, "Booking saved!")
@@ -501,12 +511,16 @@ def book_room(request):
                 "penthouse": 20000,
             }
 
-            room_name = (data.get("room") or "").lower().replace(" room", "").strip()
-            price = room_prices.get(room_name, 0)
+            room_obj = Room.objects.filter(room_type__iexact=data.get("room")).first()
+
+            if not room_obj:
+                return JsonResponse({"status": "error", "message": "Room not found"})
+
+            price = room_obj.price
 
             Booking.objects.create(
                 user=request.user,
-                room=data.get("room"),
+                room = Room.objects.get(id=data.get("room_id")),
                 full_name=data.get("full_name"),
                 contact_number=data.get("contact_number"),
                 email=data.get("email"),
@@ -638,8 +652,17 @@ def admin_walkin(request):
 
         room = get_object_or_404(Room, id=room_id)
 
+        check_in = datetime.strptime(check_in, "%Y-%m-%d").date()
+        check_out = datetime.strptime(check_out, "%Y-%m-%d").date()
+
+        nights = (check_out - check_in).days
+        if nights < 1:
+            nights = 1
+
+        total_price = room.price * nights
+
         Booking.objects.create(
-            room=room.room_type,
+            room=room,
             full_name=guest_name,
             contact_number=guest_phone,
             email=guest_email,
@@ -647,6 +670,8 @@ def admin_walkin(request):
             check_out_date=check_out,
             guests=guests,
             price=room.price,
+            nights=nights,
+            total_price=total_price,
             status='Confirmed'
         )
 
@@ -683,3 +708,10 @@ def room_booked_dates(request, room_id):
             booked_dates.append(current.strftime("%Y-%m-%d"))
             current += timedelta(days=1)
     return JsonResponse({"booked_dates": booked_dates})
+
+@login_required
+def checkout_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.status = "Completed"
+    booking.save()
+    return redirect("admin_bookings")
