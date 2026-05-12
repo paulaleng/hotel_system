@@ -468,7 +468,7 @@ def room_details(request):
         total_price = price * nights
 
         Booking.objects.create(
-         room=room,
+        room=room,
         full_name=name,
         contact_number=contact,
         email=email,
@@ -520,7 +520,7 @@ def book_room(request):
 
             Booking.objects.create(
                 user=request.user,
-                room = Room.objects.get(id=data.get("room_id")),
+                room=room_obj.room_type,
                 full_name=data.get("full_name"),
                 contact_number=data.get("contact_number"),
                 email=data.get("email"),
