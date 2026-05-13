@@ -62,7 +62,7 @@
   <!-- TABS -->
   <div class="tabs">
   <button class="tab active" onclick="filterBookings('pending', event)">Pending</button>
-  <button class="tab" onclick="filterBookings('current', event)">Current Booking</button>
+  <button class="tab" onclick="filterBookings('current', event)">Check-Ins</button>
   <button class="tab" onclick="filterBookings('confirmed', event)">Previous Bookings</button>
 </div>
 
@@ -129,18 +129,19 @@
     Remove
   </button>
 
-{% elif b.status == "Confirmed" %}
+  {% elif b.status == "Confirmed" %}
 
   <button class="checkout"
     onclick="event.stopPropagation(); checkoutBooking('{{ b.id }}')">
     Checkout
   </button>
 
-{% else %}
+  {% else %}
 
   <div style="width: 140px;"></div>
 
-{% endif %}
+  {% endif %}
+
 
 </div>
 
