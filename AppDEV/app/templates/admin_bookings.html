@@ -131,26 +131,17 @@
 
   {% elif b.status == "Confirmed" %}
 
-  {% now "Y-m-d" as today %}
-
-  {% if b.check_in_date|date:"Y-m-d" <= today and b.check_out_date|date:"Y-m-d" >= today %}
-
-    <button class="checkout"
-      onclick="event.stopPropagation(); checkoutBooking('{{ b.id }}')">
-      Checkout
-    </button>
+  <button class="checkout"
+    onclick="event.stopPropagation(); checkoutBooking('{{ b.id }}')">
+    Checkout
+  </button>
 
   {% else %}
 
-    <div style="width: 140px;"></div>
+  <div style="width: 140px;"></div>
 
   {% endif %}
 
-{% else %}
-
-  <div style="width: 140px;"></div>
-
-{% endif %}
 
 </div>
 

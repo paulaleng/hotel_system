@@ -142,13 +142,13 @@ body {
 }
 
 .checkout {
-  background: #ef4444;
+  background: #e74c3c;
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-weight: 600;
 }
 
 /* =========================
