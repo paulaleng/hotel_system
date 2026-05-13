@@ -801,6 +801,9 @@ def checkout_booking(request, booking_id):
     if not request.user.is_staff:
         return JsonResponse({'success': False, 'message': 'Not authorized'})
     
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    
     booking = get_object_or_404(Booking, id=booking_id)
     booking.status = "Completed"
     booking.save()
@@ -808,16 +811,12 @@ def checkout_booking(request, booking_id):
     # ✅ SEND CHECKOUT EMAIL
     success, msg = send_checkout_email(booking)
     
-    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # AJAX request
+    if success:
         return JsonResponse({
             'success': True,
             'message': f"Checkout completed! Email sent to {booking.email}"
         })
-    else:
-        # Regular POST request
-        if success:
-            messages.success(request, f"Checkout completed! Email sent to {booking.email}")
-        else:
-            messages.warning(request, f"Checkout completed but email failed: {msg}")
-        return redirect('admin_bookings')
+    return JsonResponse({
+        'success': False,
+        'message': f"Checkout completed but email failed: {msg}"
+    })
