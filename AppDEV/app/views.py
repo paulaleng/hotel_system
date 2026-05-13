@@ -331,13 +331,12 @@ def admin_bookings(request):
     for b in bookings:
         if b.check_in_date and b.check_out_date:
             nights = (b.check_out_date - b.check_in_date).days
-            nights = max(nights, 0)
+        nights = max(nights, 0)
     else:
         nights = 0
 
     b.nights = nights
     b.total_price = (b.price or 0) * nights
-
     return render(request, "admin_bookings.html", {
         "bookings": bookings,
         "current_bookings": current_bookings   # 🔥 NEW
@@ -636,12 +635,10 @@ from django.db.models import Prefetch
 @login_required
 def admin_walkin(request):
 
-    # Show ALL rooms — availability is handled by the calendar's booked dates,
-    # not by a boolean flag. A room with future bookings is still selectable
-    # for other date ranges.
     available_rooms = Room.objects.all().prefetch_related("gallery").order_by('-created_at')
 
     if request.method == "POST":
+
         guest_name  = request.POST.get('guest_name')
         guest_email = request.POST.get('guest_email')
         guest_phone = request.POST.get('guest_phone')
@@ -650,19 +647,43 @@ def admin_walkin(request):
         check_in    = request.POST.get('check_in')
         check_out   = request.POST.get('check_out')
 
+        if not room_id:
+            messages.error(request, "Please select a room.")
+            return redirect('admin_walkin')
+
         room = get_object_or_404(Room, id=room_id)
 
-        check_in = datetime.strptime(check_in, "%Y-%m-%d").date()
-        check_out = datetime.strptime(check_out, "%Y-%m-%d").date()
+        if not check_in or not check_out:
+            messages.error(request, "Please select check-in and check-out dates.")
+            return redirect('admin_walkin')
+
+        try:
+            check_in = datetime.strptime(check_in, "%Y-%m-%d").date()
+            check_out = datetime.strptime(check_out, "%Y-%m-%d").date()
+        except ValueError:
+            messages.error(request, "Invalid date format.")
+            return redirect('admin_walkin')
+
+        if check_out <= check_in:
+            messages.error(request, "Check-out must be after check-in.")
+            return redirect('admin_walkin')
+
+        conflict_exists = Booking.objects.filter(
+            room=room.room_type,
+            status__iexact='Confirmed',
+            check_in_date__lt=check_out,
+            check_out_date__gt=check_in
+        ).exists()
+
+        if conflict_exists:
+            messages.error(request, "This room is already booked for the selected dates.")
+            return redirect('admin_walkin')
 
         nights = (check_out - check_in).days
-        if nights < 1:
-            nights = 1
-
         total_price = room.price * nights
 
         Booking.objects.create(
-            room=room,
+            room=room.room_type,
             full_name=guest_name,
             contact_number=guest_phone,
             email=guest_email,
@@ -670,8 +691,6 @@ def admin_walkin(request):
             check_out_date=check_out,
             guests=guests,
             price=room.price,
-            nights=nights,
-            total_price=total_price,
             status='Confirmed'
         )
 
@@ -682,7 +701,10 @@ def admin_walkin(request):
         'available_rooms': available_rooms
     })
 
+
+# ✅ THIS MUST BE OUTSIDE admin_walkin
 def room_images(request, room_id):
+
     room = get_object_or_404(Room, id=room_id)
 
     images = room.gallery.all()
@@ -694,24 +716,56 @@ def room_images(request, room_id):
     return JsonResponse(data)
 
 
+# ✅ THIS MUST ALSO BE OUTSIDE
 def room_booked_dates(request, room_id):
+
     room = get_object_or_404(Room, id=room_id)
+
     bookings = Booking.objects.filter(
         room=room.room_type,
         status__iexact='Confirmed'
     )
+
     booked_dates = []
+
     for booking in bookings:
+
         current = booking.check_in_date
         last_night = booking.check_out_date - timedelta(days=1)
+
         while current <= last_night:
+
             booked_dates.append(current.strftime("%Y-%m-%d"))
             current += timedelta(days=1)
-    return JsonResponse({"booked_dates": booked_dates})
+
+    return JsonResponse({
+        "booked_dates": booked_dates
+    })
 
 @login_required
 def checkout_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id)
-    booking.status = "Completed"
-    booking.save()
-    return redirect("admin_bookings")
+
+    if request.method != "POST":
+        return JsonResponse({
+            "status": "error",
+            "message": "Invalid request method"
+        }, status=400)
+
+    try:
+
+        booking = get_object_or_404(Booking, id=booking_id)
+
+        booking.status = "Completed"
+
+        booking.save()
+
+        return JsonResponse({
+            "status": "success"
+        })
+
+    except Exception as e:
+
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)

@@ -41,6 +41,9 @@ urlpatterns = [
     path('dashboard/walkin/', views.admin_walkin, name='admin_walkin'),
     path('api/room-images/<int:room_id>/', views.room_images, name='room_images'),
     path('api/room-booked-dates/<int:room_id>/', views.room_booked_dates, name='room_booked_dates'),
+    path('dashboard/bookings/checkout/<int:booking_id>/',views.checkout_booking, name='checkout_booking'),
+    path('dashboard/bookings/checkout/<int:booking_id>/', views.checkout_booking, name='checkout_booking'),
+    path('', views.GuestBooking, name='Guest_booking'),
     
 ]
     

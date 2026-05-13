@@ -45,7 +45,7 @@
     <td>{{ guest.email }}</td>
     
     <td>{{ guest.date_joined|date:"M d, Y" }}</td>
-    <td>--</td>
+    <td>{{ guest.total_bookings }}</td>
     <td>
       <form method="POST" action="{% url 'delete_guest' guest.id %}">
         {% csrf_token %}

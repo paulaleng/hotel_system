@@ -303,7 +303,7 @@ function filterBookings(type, event) {
 
   const today = new Date();
 
-  // SHOW/HIDE HISTORY FILTERS
+  // show date filters only in Previous Bookings
   if (type === "confirmed") {
     dateFilters.style.display = "flex";
   } else {
@@ -313,27 +313,37 @@ function filterBookings(type, event) {
   cards.forEach(card => {
 
     const status = (card.dataset.status || "").toLowerCase();
+
     const checkin = new Date(card.dataset.checkin);
     const checkout = new Date(card.dataset.checkout);
 
     let show = false;
 
-    // ✅ PENDING
+    // =========================
+    // PENDING
+    // =========================
     if (type === "pending") {
       show = status === "pending";
     }
 
-    // ✅ CURRENT BOOKING (THIS IS WHAT YOU WANTED)
+    // =========================
+    // CHECK-INS (CURRENT)
+    // =========================
     if (type === "current") {
+
       show =
         status === "confirmed" &&
         today >= checkin &&
         today <= checkout;
     }
 
-    // ✅ PREVIOUS / CONFIRMED HISTORY
+    // =========================
+    // PREVIOUS BOOKINGS
+    // =========================
     if (type === "confirmed") {
-      show = status === "confirmed";
+
+      show =
+        status === "completed";
     }
 
     card.style.display = show ? "flex" : "none";
@@ -359,10 +369,10 @@ function filterByDate(type, event) {
 
     const status = (card.dataset.status || "").toLowerCase();
 
-    if (status !== "confirmed") {
-      card.style.display = "none";
-      return;
-    }
+   if (status !== "completed") {
+  card.style.display = "none";
+  return;
+}
 
     const checkin = new Date(card.dataset.checkin);
 
@@ -464,14 +474,41 @@ function submitRemove() {
 }
 
 function checkoutBooking(id) {
-  if (!confirm("Mark this booking as checked out?")) return;
+
+  if (!confirm("Mark this booking as checked out?")) {
+    return;
+  }
 
   fetch("/dashboard/bookings/checkout/" + id + "/", {
     method: "POST",
     headers: {
-      "X-CSRFToken": "{{ csrf_token }}"
+      "X-CSRFToken": "{{ csrf_token }}",
+      "Content-Type": "application/json"
     }
-  }).then(() => location.reload());
+  })
+
+  .then(async res => {
+
+    const data = await res.json();
+
+    if (res.ok && data.status === "success") {
+
+      localStorage.setItem("activeBookingTab", "confirmed");
+
+      location.reload();
+
+    } else {
+
+      alert(data.message || "Checkout failed");
+    }
+  })
+
+  .catch(err => {
+
+    console.error(err);
+
+    alert("Server error occurred.");
+  });
 }
 
 function closeRemoveModal() {
@@ -505,6 +542,23 @@ searchInput.addEventListener("input", function () {
   });
 });
 
+window.addEventListener("DOMContentLoaded", () => {
+
+  const activeTab =
+    localStorage.getItem("activeBookingTab");
+
+  if (activeTab === "confirmed") {
+
+    const previousTab =
+      document.querySelectorAll(".tabs:first-of-type .tab")[2];
+
+    filterBookings("confirmed", {
+      target: previousTab
+    });
+
+    localStorage.removeItem("activeBookingTab");
+  }
+});
 </script>
 
 </body>
