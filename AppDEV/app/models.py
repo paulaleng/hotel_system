@@ -185,6 +185,20 @@ class AdminBooking(models.Model):
 
     
 # =========================
+# EMAIL VERIFICATION (FOR LOGIN 2FA)
+# =========================
+class EmailVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='email_verification')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.email} - Code Verification"
+
+    
+# =========================
 # ADMIN GUEST
 # =========================
 class Guest(models.Model):

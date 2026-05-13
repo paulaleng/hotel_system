@@ -5,12 +5,6 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.timezone import now
-from django.core.mail import send_mail
-from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.urls import reverse
 from .models import Booking
 from .models import UserProfile 
 from django.views.decorators.csrf import csrf_exempt
@@ -18,9 +12,10 @@ from django.http import JsonResponse
 from django.utils.text import slugify
 from datetime import timedelta
 from datetime import datetime
+from .utils import send_verification_email, verify_code, send_booking_confirmation_email, send_checkout_email
 
 import json
-from .models import GuestBooking, Room, AdminBooking, RoomImage
+from .models import GuestBooking, Room, AdminBooking, RoomImage, EmailVerification
 
 
 # =========================
@@ -152,7 +147,7 @@ def admin_logout(request):
 
 
 # =========================
-# USER LOGIN
+# USER LOGIN (STEP 1: SEND VERIFICATION CODE)
 # =========================
 def user_login(request):
 
@@ -167,17 +162,87 @@ def user_login(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            return redirect('homepage')
-
-        if User.objects.filter(username=username, is_active=False).exists():
-            messages.error(request, "Account not activated. Please confirm your email before logging in.")
+            # ✅ SEND VERIFICATION CODE INSTEAD OF LOGGING IN DIRECTLY
+            success, message_text = send_verification_email(user)
+            
+            if success:
+                messages.success(request, message_text)
+                # Store username in session for verification page
+                request.session['pending_login_username'] = username
+                return redirect('verify_email')
+            else:
+                messages.error(request, message_text)
+                return render(request, 'login.html')
         else:
             messages.error(request, "Invalid username or password")
-
-        return render(request, 'login.html')
+            return render(request, 'login.html')
 
     return render(request, 'login.html')
+
+
+# =========================
+# EMAIL VERIFICATION (STEP 2: VERIFY CODE)
+# =========================
+def verify_email(request):
+    """
+    Verify the email code sent to user
+    """
+    username = request.session.get('pending_login_username')
+    
+    if not username:
+        messages.error(request, "Please login first")
+        return redirect('login')
+    
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        messages.error(request, "User not found")
+        return redirect('login')
+    
+    if request.method == "POST":
+        code = request.POST.get('code')
+        
+        is_valid, message_text = verify_code(user, code)
+        
+        if is_valid:
+            # ✅ NOW LOGIN THE USER
+            login(request, user)
+            request.session.pop('pending_login_username', None)  # Safely remove key
+            messages.success(request, "Login successful!")
+            return redirect('homepage')
+        else:
+            messages.error(request, message_text)
+            return render(request, 'verify_email.html', {
+                'email': user.email
+            })
+    
+    return render(request, 'verify_email.html', {
+        'email': user.email
+    })
+
+
+# =========================
+# RESEND VERIFICATION CODE
+# =========================
+def resend_code(request):
+    """
+    Resend verification code to user's email
+    """
+    username = request.session.get('pending_login_username')
+    
+    if not username:
+        return JsonResponse({'success': False, 'message': 'No pending login'})
+    
+    try:
+        user = User.objects.get(username=username)
+        success, message_text = send_verification_email(user)
+        return JsonResponse({
+            'success': success,
+            'message': message_text
+        })
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'User not found'})
+
 
 
 # =========================
@@ -200,62 +265,16 @@ def register(request):
                 'error': 'Username already exists'
             })
 
-        user = User.objects.create_user(
+        User.objects.create_user(
             username=username,
             email=email,
-            password=password1,
-            is_active=False
+            password=password1
         )
 
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-        confirm_path = reverse('confirm_register', kwargs={'uidb64': uid, 'token': token})
-        confirm_url = request.build_absolute_uri(confirm_path)
-
-        subject = 'Confirm your hotel account'
-        message = (
-            f"Hi {username},\n\n"
-            "Thanks for registering at Grand Solace Hotel.\n"
-            "Please confirm that this registration was made by you by clicking the link below:\n\n"
-            f"{confirm_url}\n\n"
-            "If you did not register, you can ignore this email.\n\n"
-            "Best regards,\n"
-            "Grand Solace Hotel"
-        )
-
-        try:
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-            messages.success(request, "Account created. A confirmation email has been sent.")
-        except Exception as e:
-            messages.error(request, f"Account created but confirmation email failed: {e}")
-
+        messages.success(request, "Account created successfully. Please login.")
         return redirect('login')
 
     return render(request, 'register.html')
-
-
-def confirm_register(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save()
-        messages.success(request, "Your email is confirmed. You can now log in.")
-        return redirect('login')
-
-    return render(request, 'register_confirm.html', {
-        'error': 'The confirmation link is invalid or has expired.'
-    })
 
 
 # =========================
@@ -631,11 +650,22 @@ def schedule(request):
 # ADMIN BOOKING
 # =========================
 @login_required
+@login_required
 def confirm_booking(request, booking_id):
+    if not request.user.is_staff:
+        return redirect('home')
+    
     booking = get_object_or_404(Booking, id=booking_id)
 
     booking.status = 'Confirmed'
     booking.save()
+    
+    # ✅ SEND CONFIRMATION EMAIL
+    success, msg = send_booking_confirmation_email(booking)
+    if success:
+        messages.success(request, f"Booking confirmed! Email sent to {booking.email}")
+    else:
+        messages.warning(request, f"Booking confirmed but email failed: {msg}")
 
     return redirect('admin_bookings')
 
@@ -766,11 +796,28 @@ def room_booked_dates(request, room_id):
     return JsonResponse({"booked_dates": booked_dates})
 
 @login_required
+@csrf_exempt
 def checkout_booking(request, booking_id):
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Not authorized'})
+    
     booking = get_object_or_404(Booking, id=booking_id)
     booking.status = "Completed"
     booking.save()
-    return redirect("admin_bookings")
-    booking.status = "Completed"
-    booking.save()
-    return redirect("admin_bookings")
+    
+    # ✅ SEND CHECKOUT EMAIL
+    success, msg = send_checkout_email(booking)
+    
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # AJAX request
+        return JsonResponse({
+            'success': True,
+            'message': f"Checkout completed! Email sent to {booking.email}"
+        })
+    else:
+        # Regular POST request
+        if success:
+            messages.success(request, f"Checkout completed! Email sent to {booking.email}")
+        else:
+            messages.warning(request, f"Checkout completed but email failed: {msg}")
+        return redirect('admin_bookings')

@@ -41,6 +41,18 @@
   display: flex;
   transition: 0.2s ease;
 }
+
+/* Fade out animation for checkout */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
 </style>
 
 </head>
@@ -471,7 +483,27 @@ function checkoutBooking(id) {
     headers: {
       "X-CSRFToken": "{{ csrf_token }}"
     }
-  }).then(() => location.reload());
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // ✅ Remove the booking card from the page
+      const card = document.querySelector(`[data-id="${id}"]`);
+      if (card) {
+        card.style.animation = "fadeOut 0.5s ease";
+        setTimeout(() => {
+          card.remove();
+          alert("✓ Booking checked out successfully! Email sent to guest.");
+        }, 500);
+      }
+    } else {
+      alert("Error: " + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert("An error occurred during checkout.");
+  });
 }
 
 function closeRemoveModal() {

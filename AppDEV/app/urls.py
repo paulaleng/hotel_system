@@ -12,6 +12,8 @@ urlpatterns = [
     path('logout/', views.admin_logout, name='logout'),
 
     path('login/', views.user_login, name='login'),
+    path('verify-email/', views.verify_email, name='verify_email'),
+    path('resend-code/', views.resend_code, name='resend_code'),
     path('register/', views.register, name='register'),
 
     path('rooms/', views.rooms, name='rooms'),
@@ -36,6 +38,7 @@ urlpatterns = [
     path('dashboard/guests/delete/<int:user_id>/', views.delete_guest, name='delete_guest'),
     path('dashboard/bookings/', views.admin_bookings, name='admin_bookings'),
     path('dashboard/bookings/confirm/<int:booking_id>/', views.confirm_booking, name='confirm_booking'),
+    path('dashboard/bookings/checkout/<int:booking_id>/', views.checkout_booking, name='checkout_booking'),
     path('dashboard/bookings/delete/<int:booking_id>/', views.delete_booking, name='delete_booking'),
     path('dashboard/bookings/reject/<int:booking_id>/', views.reject_booking, name='reject_booking'),
     path('dashboard/walkin/', views.admin_walkin, name='admin_walkin'),
