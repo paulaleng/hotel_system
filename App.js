@@ -8,6 +8,7 @@ import Rooms from "./components/room";
 import RoomDetails from "./components/details";
 import ProfileScreen from "./components/profile";
 import ScheduleScreen from "./components/schedule";
+import OTP from './components/OTP';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,7 @@ export default function App() {
 
         <Stack.Screen name="Landing" component={Landing} />
         <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="OTP" component={OTP} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Rooms" component={Rooms} />
         <Stack.Screen name="RoomDetails" component={RoomDetails} />

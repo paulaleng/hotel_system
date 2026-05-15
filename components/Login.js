@@ -9,47 +9,97 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { useNavigation } from '@react-navigation/native';
 
-const APP_URL = 'http://192.168.1.33:8000';
+const APP_URL = 'http://192.168.100.13:8000';
 
 export default function Login() {
+
   const navigation = useNavigation();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+
+    // validation
     if (!username.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter your username and password.');
+      Alert.alert('Error', 'Please enter username and password');
       return;
     }
 
     setLoading(true);
+
     try {
+
       const response = await fetch(`${APP_URL}/api/login/`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ username: username.trim(), password }),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password,
+        }),
       });
 
       const data = await response.json();
 
-      if (data.status === 'success') {
-        // Save token and basic user info for use across the app
-        await AsyncStorage.setItem('auth_token', data.token);
-        await AsyncStorage.setItem('user',       JSON.stringify(data.user));
+      console.log('LOGIN RESPONSE:', JSON.stringify(data, null, 2));
 
-        // Navigate and reset the stack so Back doesn't return to Login
-        navigation.reset({ index: 0, routes: [{ name: 'Rooms' }] });
-      } else {
-        Alert.alert('Login Failed', data.message || 'Invalid username or password.');
+      const status = data?.status?.toLowerCase();
+
+      // =========================
+      // OTP FLOW
+      // =========================
+      if (status === 'otp_sent') {
+
+        Alert.alert(
+          'OTP Sent',
+          'Check your email for OTP'
+        );
+
+        navigation.navigate('OTP', {
+          username: username.trim(),
+        });
+
+        return;
       }
-    } catch (err) {
-      console.error('Login error:', err);
-      Alert.alert('Error', 'Could not connect to the server. Please try again.');
+
+      // =========================
+      // DIRECT LOGIN SUCCESS (NO OTP)
+      // =========================
+      if (status === 'success') {
+
+        Alert.alert(
+          'Success',
+          'Login Successful'
+        );
+
+        navigation.replace('Rooms');
+
+        return;
+      }
+
+      // =========================
+      // ERROR
+      // =========================
+      Alert.alert(
+        'Login Failed',
+        data.message || 'Invalid username or password'
+      );
+
+    } catch (error) {
+
+      console.log('LOGIN ERROR:', error);
+
+      Alert.alert(
+        'Connection Error',
+        'Cannot connect to server'
+      );
+
     } finally {
       setLoading(false);
     }
@@ -66,11 +116,15 @@ export default function Login() {
 
           {/* TITLE */}
           <Text style={styles.title}>Login</Text>
-          <Text style={styles.subtitle}>Welcome back, please sign in</Text>
+
+          <Text style={styles.subtitle}>
+            Welcome back, please sign in
+          </Text>
 
           {/* USERNAME */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Username</Text>
+
             <TextInput
               value={username}
               onChangeText={setUsername}
@@ -85,34 +139,44 @@ export default function Login() {
           {/* PASSWORD */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
+
             <TextInput
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
-              placeholder="Enter password"
+              placeholder="Enter Password"
               placeholderTextColor="#777"
+              secureTextEntry
               style={styles.input}
             />
           </View>
 
-          {/* BUTTON */}
+          {/* LOGIN BUTTON */}
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              loading && styles.buttonDisabled,
+            ]}
             onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>LOGIN</Text>
+              <Text style={styles.buttonText}>
+                LOGIN
+              </Text>
             )}
           </TouchableOpacity>
 
-          {/* LINK */}
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          {/* REGISTER */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Register')}
+          >
             <Text style={styles.link}>
               Don't have an account?{' '}
-              <Text style={styles.linkClick}>Register</Text>
+              <Text style={styles.linkClick}>
+                Register
+              </Text>
             </Text>
           </TouchableOpacity>
 
@@ -123,79 +187,89 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  bg:      { flex: 1 },
+
+  bg: { flex: 1 },
+
   overlay: {
-    flex:            1,
-    justifyContent:  'center',
-    alignItems:      'center',
-    backgroundColor: 'rgba(0,0,0,0.30)',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
+
   box: {
-    width:           '90%',
-    maxWidth:        420,
-    backgroundColor: 'rgba(255,255,255,0.78)',
-    padding:         30,
-    borderRadius:    22,
-    shadowColor:     '#000',
-    shadowOpacity:   0.2,
-    shadowRadius:    18,
-    elevation:       10,
-    alignItems:      'center',
+    width: '90%',
+    maxWidth: 420,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    borderRadius: 22,
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    elevation: 10,
   },
+
   title: {
-    fontSize:    28,
-    fontWeight:  'bold',
-    color:       '#111827',
-    letterSpacing: 1,
-    marginBottom: 6,
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 5,
   },
+
   subtitle: {
-    fontSize:     13,
-    color:        '#6b7280',
+    fontSize: 13,
+    color: '#6b7280',
     marginBottom: 22,
-    textAlign:    'center',
   },
+
   inputGroup: {
-    width:        '100%',
+    width: '100%',
     marginBottom: 15,
   },
+
   label: {
-    color:        '#374151',
+    fontSize: 13,
+    color: '#374151',
     marginBottom: 6,
-    fontSize:     13,
   },
+
   input: {
-    width:           '100%',
-    padding:         14,
-    backgroundColor: 'rgba(241,245,249,0.9)',
-    borderRadius:    12,
-    color:           '#111',
-  },
-  button: {
-    width:        '100%',
-    padding:      16,
-    backgroundColor: '#c8a96a',
+    width: '100%',
+    padding: 14,
     borderRadius: 12,
-    marginTop:    10,
-    alignItems:   'center',
+    backgroundColor: 'rgba(241,245,249,0.95)',
+    color: '#111',
   },
+
+  button: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#c8a96a',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
   buttonDisabled: {
     backgroundColor: '#d9bc8d',
   },
+
   buttonText: {
-    fontWeight:    'bold',
-    color:         '#fff',
-    fontSize:      16,
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
     letterSpacing: 1,
   },
+
   link: {
     marginTop: 20,
-    textAlign: 'center',
-    color:     '#111',
+    color: '#111',
   },
+
   linkClick: {
-    color:             '#2563eb',
-    fontWeight:        'bold',
+    color: '#2563eb',
+    fontWeight: 'bold',
     textDecorationLine: 'underline',
   },
 });

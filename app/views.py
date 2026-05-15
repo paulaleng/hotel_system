@@ -10,8 +10,12 @@ from django.http import JsonResponse
 from django.core import signing
 
 import json
+import random
 from .models import Booking, UserProfile, Room
-
+from django.contrib.auth import authenticate
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 # =========================
 # TOKEN HELPERS
@@ -704,6 +708,132 @@ def book_room(request):
             price          = data.get("price"),
             status         = 'Pending',
         )
+
+        subject = "🏨 Booking Confirmed - Grand Solace Hotel"
+
+        message = f"""
+        Dear {data.get('full_name')},
+
+        ✨ Warm greetings from Grand Solace Hotel!
+
+        We are delighted to confirm your reservation with us. Thank you for choosing Grand Solace Hotel for your upcoming stay.
+
+        📌 Booking Details:
+        🏨 Hotel: Grand Solace Hotel
+        🛏 Room: {data.get('room')}
+        📅 Check-in: {data.get('check_in_date')}
+        📅 Check-out: {data.get('check_out_date')}
+        👥 Guests: {data.get('guests')}
+
+        We are committed to providing you with a comfortable, relaxing, and memorable experience.
+
+        If you have any special requests or need assistance before your arrival, feel free to contact us anytime.
+
+        We look forward to welcoming you soon at Grand Solace Hotel. ✨
+
+        Best regards,  
+        Grand Solace Hotel Team
+        """
+
+        send_mail(
+            subject,
+            message,
+            "yourgmail@gmail.com",
+            [data.get('email')],
+            fail_silently=False,
+        )
         return JsonResponse({"status": "success", "message": "Booking saved successfully"})
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)})
+
+
+otp_storage = {}
+
+
+@csrf_exempt
+def login_view(request):
+
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required'})
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid username or password'
+            })
+
+        # generate OTP
+        otp = str(random.randint(100000, 999999))
+        otp_storage[username] = otp
+
+        print("OTP GENERATED:", otp)
+
+        # send OTP email
+        send_mail(
+            'Your OTP Code',
+            f'Your OTP is: {otp}',
+            'yourgmail@gmail.com',
+            [user.email],
+            fail_silently=False,
+        )
+
+        return JsonResponse({
+            'status': 'otp_sent'
+        })
+
+    except Exception as e:
+        print("LOGIN ERROR:", str(e))
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Server error'
+        })
+
+
+@csrf_exempt
+def verify_otp(request):
+
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required'})
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+
+        username = data.get('username')
+        otp = data.get('otp')
+
+        saved_otp = otp_storage.get(username)
+
+        if not saved_otp:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'OTP expired or not found'
+            })
+
+        if otp == saved_otp:
+
+            del otp_storage[username]
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'OTP verified'
+            })
+
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid OTP'
+        })
+
+    except Exception as e:
+        print("OTP ERROR:", str(e))
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Server error'
+        })

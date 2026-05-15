@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import login_view, verify_otp
 
 urlpatterns = [
 
@@ -53,7 +54,8 @@ urlpatterns = [
     # =========================
     # AUTH API
     # =========================
-    path('api/login/',    views.api_login,    name='api_login'),
+    path('api/login/', login_view, name='api_login'),
+    path('api/verify-otp/', verify_otp, name='verify_otp'),
     path('api/register/', views.api_register, name='api_register'),
 
     # =========================
@@ -81,4 +83,5 @@ urlpatterns = [
     # BOOKING API
     # =========================
     path('api/book-room/', views.book_room, name='book_room'),
+    path('', views.home, name='home'),
 ]
