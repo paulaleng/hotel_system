@@ -130,7 +130,11 @@
   </button>
 
   {% elif b.status == "Confirmed" %}
-
+  <button class="edit"
+  onclick="event.stopPropagation(); openEditModal('{{ b.id }}', '{{ b.check_in_date }}', '{{ b.check_out_date }}')">
+  Edit Dates
+  </button>
+  
   <button class="checkout"
     onclick="event.stopPropagation(); checkoutBooking('{{ b.id }}')">
     Checkout
@@ -255,7 +259,31 @@
   </div>
 </div>
 
+<!-- EDIT DATES MODAL -->
+<div id="editModal" class="modal">
 
+  <div class="modal-content">
+
+    <h2>Edit Booking Dates</h2>
+
+    <div class="date-group">
+      <label>Check-in Date</label>
+      <input type="date" id="editCheckin">
+    </div>
+
+    <div class="date-group">
+      <label>Check-out Date</label>
+      <input type="date" id="editCheckout">
+    </div>
+
+    <div class="modal-actions">
+    <button class="save-btn" onclick="submitEditDates()">Save</button>
+    <button class="cancel-btn" onclick="closeEditModal()">Cancel</button>
+    </div>
+
+  </div>
+
+</div>
 <script>
 
 let selectedBookingId = null;
@@ -541,6 +569,65 @@ searchInput.addEventListener("input", function () {
     card.style.display = match ? "flex" : "none";
   });
 });
+
+function formatDateForInput(dateStr) {
+  const d = new Date(dateStr);
+  return d.toISOString().split("T")[0];
+}
+
+function openEditModal(id, checkin, checkout) {
+
+  editBookingId = id;
+
+  document.getElementById("editCheckin").value = formatDateForInput(checkin);
+  document.getElementById("editCheckout").value = formatDateForInput(checkout);
+
+  document.getElementById("editModal").style.display = "flex";
+}
+function closeEditModal() {
+  document.getElementById("editModal").style.display = "none";
+}
+
+function submitEditDates() {
+
+  const checkin =
+    document.getElementById("editCheckin").value;
+
+  const checkout =
+    document.getElementById("editCheckout").value;
+
+  fetch("/dashboard/bookings/edit-dates/" + editBookingId + "/", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}"
+    },
+
+    body: JSON.stringify({
+      check_in_date: checkin,
+      check_out_date: checkout
+    })
+
+  })
+
+  .then(res => res.json())
+
+  .then(data => {
+
+    if (data.status === "success") {
+
+      alert("Booking dates updated successfully!");
+
+      location.reload();
+
+    } else {
+
+      alert(data.message || "Failed to update booking.");
+    }
+  });
+}
 
 window.addEventListener("DOMContentLoaded", () => {
 

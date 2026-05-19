@@ -405,4 +405,63 @@ button.checkout {
   display: inline-block !important;
   line-height: 1 !important;
 }
+/* EDIT MODAL - USE EXISTING STYLES ONLY */
+#editModal.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(7px);
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
 
+#editModal .modal-content {
+  text-align: center;
+}
+
+#editModal button {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#editModal .save-btn {
+  background: #16a34a;
+  color: white;
+}
+
+#editModal .cancel-btn {
+  background: #334155;
+  color: white;
+}
+/* safety: remove global override inside modal */
+#editModal button {
+  all: unset;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-block;
+}
+.edit {
+  background: #5d92e7;
+  color: #f1f5f9;
+  border: 1px solid #84a2cc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex; 
+  min-width: 100px; 
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.edit:hover {
+  background: #5a81c5;
+}

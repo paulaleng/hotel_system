@@ -44,6 +44,6 @@ urlpatterns = [
     path('dashboard/bookings/checkout/<int:booking_id>/',views.checkout_booking, name='checkout_booking'),
     path('dashboard/bookings/checkout/<int:booking_id>/', views.checkout_booking, name='checkout_booking'),
     path('', views.GuestBooking, name='Guest_booking'),
-    
+    path('dashboard/bookings/edit-dates/<int:booking_id>/', views.edit_booking_dates, name='edit_booking_dates'),
 ]
     

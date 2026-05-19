@@ -765,3 +765,19 @@ def checkout_booking(request, booking_id):
             "status": "error",
             "message": str(e)
         }, status=500)
+def edit_booking_dates(request, booking_id):
+
+    if request.method == "POST":
+
+        data = json.loads(request.body)
+
+        booking = Booking.objects.get(id=booking_id)
+
+        booking.check_in_date = data["check_in_date"]
+        booking.check_out_date = data["check_out_date"]
+
+        booking.save()
+
+        return JsonResponse({
+            "status": "success"
+        })
