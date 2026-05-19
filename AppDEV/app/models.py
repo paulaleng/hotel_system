@@ -112,6 +112,10 @@ class Booking(models.Model):
 
     guests = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    nights = models.IntegerField(default=0)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    downpayment = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
 
     status = models.CharField(        # ✅ ADDED
         max_length=20,

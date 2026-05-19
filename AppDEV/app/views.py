@@ -64,7 +64,7 @@ def profile(request):
         messages.success(request, "Profile updated successfully!")
         return redirect("profile")
 
-    # ✅ COUNT BOOKINGS (for display)
+    # COUNT BOOKINGS (for display)
     total_bookings = Booking.objects.filter(email=user.email).count() if user.email else 0
 
     return render(request, "profile.html", {
@@ -150,7 +150,7 @@ def admin_logout(request):
 # =========================
 def user_login(request):
 
-    # ✅ CLEAR OLD MESSAGES (IMPORTANT FIX)
+    # CLEAR OLD MESSAGES
     storage = get_messages(request)
     storage.used = True
 
@@ -207,9 +207,6 @@ def register(request):
 # =========================
 def rooms(request):
 
-    # Show all rooms
-    # Availability is controlled by booked dates,
-    # not by the is_available boolean
     room_list = Room.objects.all().order_by('-created_at')
 
     for room in room_list:
@@ -251,27 +248,26 @@ def details(request):
             room.amenities_list = []
 
         # GET CONFIRMED BOOKINGS
-        # GET CONFIRMED BOOKINGS
         if room:
             bookings = Booking.objects.filter(
-        room=room.room_type,
-        status__iexact='Confirmed'
-    )
-
-    for booking in bookings:
-
-        current = booking.check_in_date
-
-        # EXCLUDE checkout date
-        last_night = booking.check_out_date - timedelta(days=1)
-
-        while current <= last_night:
-
-            booked_dates.append(
-                current.strftime("%Y-%m-%d")
+                room=room.room_type,
+                status__iexact='Confirmed'
             )
 
-            current += timedelta(days=1)
+            for booking in bookings:
+
+                current = booking.check_in_date
+
+                # EXCLUDE checkout date
+                last_night = booking.check_out_date - timedelta(days=1)
+
+                while current <= last_night:
+
+                    booked_dates.append(
+                        current.strftime("%Y-%m-%d")
+                    )
+
+                    current += timedelta(days=1)
 
     return render(request, 'details.html', {
         'room': room,
@@ -304,7 +300,7 @@ def admin_rooms(request):
                 image=img
             )
 
-        return redirect('admin_rooms')  # ✅ ONLY HERE
+        return redirect('admin_rooms')
 
     rooms = Room.objects.all().order_by('-created_at')
 
@@ -331,22 +327,22 @@ def admin_bookings(request):
     for b in bookings:
         if b.check_in_date and b.check_out_date:
             nights = (b.check_out_date - b.check_in_date).days
-        nights = max(nights, 0)
-    else:
-        nights = 0
+            nights = max(nights, 0)
+        else:
+            nights = 0
 
-    b.nights = nights
-    b.total_price = (b.price or 0) * nights
+        b.nights = nights
+        b.total_price = (b.price or 0) * nights
+
     return render(request, "admin_bookings.html", {
         "bookings": bookings,
-        "current_bookings": current_bookings   # 🔥 NEW
+        "current_bookings": current_bookings
     })
 
 @login_required
 def delete_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
 
-    # ✅ Instead of deleting, mark as Cancelled/Rejected
     booking.status = 'Cancelled'
     booking.save()
 
@@ -387,8 +383,6 @@ def edit_room(request, room_id):
 
         room.save()
 
-        print("🔥 ROOM UPDATED SUCCESSFULLY")
-
         return redirect('admin_rooms')
 
     return render(request, 'edit_room.html', {'room': room})
@@ -401,7 +395,7 @@ def edit_room(request, room_id):
 def delete_room(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     room.delete()
-    return redirect('admin_rooms')  # FIXED
+    return redirect('admin_rooms')
 
 
 # =========================
@@ -412,24 +406,19 @@ def toggle_room_status(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     room.is_available = not room.is_available
     room.save()
-    return redirect('admin_rooms')  # FIXED
+    return redirect('admin_rooms')
 
 # =========================
-# Book Now
+# Book Now (form POST fallback)
 # =========================
 def room_details(request):
     if request.method == "POST":
-
-        print("ROOM DETAILS VIEW HIT")  # 🔥 DEBUG
 
         room = request.POST.get("room")
         name = request.POST.get("fullName")
         contact = request.POST.get("contactNumber")
         email = request.POST.get("emailAddress")
-        date = request.POST.get("datePicker")
         guests = request.POST.get("guests")
-
-        print(room, name, email)  # 🔥 DEBUG CHECK
 
         room_obj = Room.objects.filter(
             room_type__iexact=room
@@ -441,23 +430,7 @@ def room_details(request):
 
         price = room_obj.price
 
-        check_in = data.get("check_in_date")
-        check_out = data.get("check_out_date")
-
-        existing = Booking.objects.filter(
-            room__iexact=data.get("room"),
-            status="Confirmed",
-            check_in_date__lt=check_out,
-            check_out_date__gt=check_in
-        ).exists()
-
-        if existing:
-            return JsonResponse({
-                "status": "error",
-                "message": "Room is already booked for selected dates"
-            })
-
-        check_in = datetime.strptime(request.POST.get("check_in_date"), "%Y-%m-%d").date()
+        check_in  = datetime.strptime(request.POST.get("check_in_date"), "%Y-%m-%d").date()
         check_out = datetime.strptime(request.POST.get("check_out_date"), "%Y-%m-%d").date()
 
         nights = (check_out - check_in).days
@@ -465,21 +438,22 @@ def room_details(request):
             nights = 1
 
         total_price = price * nights
+        downpayment = total_price / 2
 
         Booking.objects.create(
-        room=room,
-        full_name=name,
-        contact_number=contact,
-        email=email,
-        check_in_date=check_in,
-        check_out_date=check_out,
-        guests=guests,
-        price=price,
-        nights=nights,
-        total_price=total_price,
-        status='Pending'
+            room=room,
+            full_name=name,
+            contact_number=contact,
+            email=email,
+            check_in_date=check_in,
+            check_out_date=check_out,
+            guests=guests,
+            price=price,
+            nights=nights,
+            total_price=total_price,
+            downpayment=downpayment,
+            status='Pending'
         )
-
 
         messages.success(request, "Booking saved!")
 
@@ -488,51 +462,75 @@ def room_details(request):
     return render(request, "details.html")
 
 # =========================
-# ✅ NEW API FOR FETCH (IMPORTANT FIX)
+# API FOR FETCH (JSON)
 # =========================
 @csrf_exempt
 def book_room(request):
     if request.method == "POST":
         try:
 
-            data = json.loads(request.body)  # ✅ THIS FIXES YOUR ERROR
+            data = json.loads(request.body)
 
-            room_prices = {
-                "single": 2000,
-                "twin": 3200,
-                "standard": 3900,
-                "family": 5000,
-                "deluxe": 5500,
-                "suite": 7000,
-                "superior": 8500,
-                "executive": 10000,
-                "seaview": 12500,
-                "penthouse": 20000,
-            }
-
-            room_obj = Room.objects.filter(room_type__iexact=data.get("room")).first()
+            room_obj = Room.objects.filter(
+                room_type__iexact=data.get("room")
+            ).first()
 
             if not room_obj:
-                return JsonResponse({"status": "error", "message": "Room not found"})
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Room not found"
+                })
 
             price = room_obj.price
 
+            check_in_str  = data.get("check_in_date")
+            check_out_str = data.get("check_out_date")
+
+            # Overlap check
+            existing = Booking.objects.filter(
+                room__iexact=data.get("room"),
+                status="Confirmed",
+                check_in_date__lt=check_out_str,
+                check_out_date__gt=check_in_str
+            ).exists()
+
+            if existing:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Room is already booked for selected dates"
+                })
+
+            check_in  = datetime.strptime(check_in_str,  "%Y-%m-%d").date()
+            check_out = datetime.strptime(check_out_str, "%Y-%m-%d").date()
+
+            nights = max((check_out - check_in).days, 1)
+            total_price = price * nights
+
+            # ---- DOWNPAYMENT: half the total ----
+            # Accept from frontend if provided, otherwise compute server-side
+            downpayment = data.get("downpayment") or (total_price / 2)
+
             Booking.objects.create(
-                user=request.user,
+                user=request.user if request.user.is_authenticated else None,
                 room=room_obj.room_type,
                 full_name=data.get("full_name"),
                 contact_number=data.get("contact_number"),
                 email=data.get("email"),
-                check_in_date=data.get("check_in_date"),
-                check_out_date=data.get("check_out_date"),
+                check_in_date=check_in,
+                check_out_date=check_out,
                 guests=data.get("guests"),
                 price=price,
+                nights=nights,
+                total_price=total_price,
+                downpayment=downpayment,
                 status='Pending'
             )
 
             return JsonResponse({
                 "status": "success",
-                "message": "Booking saved successfully"
+                "message": "Booking saved successfully",
+                "downpayment": float(downpayment),
+                "total_price": float(total_price)
             })
 
         except Exception as e:
@@ -548,7 +546,7 @@ def book_room(request):
 
 
 # =========================
-# SCHEDULE (NEW FIXED)
+# SCHEDULE
 # =========================
 @login_required
 def schedule(request):
@@ -571,7 +569,7 @@ def schedule(request):
 
 
 # =========================
-# ADMIN BOOKING
+# ADMIN BOOKING - CONFIRM
 # =========================
 @login_required
 def confirm_booking(request, booking_id):
@@ -626,10 +624,6 @@ def previous_bookings(request):
         "bookings": bookings
     })
 
-def previous_bookings(request):
-    bookings = Booking.objects.filter(status="Completed").order_by("-created_at")
-    return render(request, "admin_bookings.html", {"bookings": bookings})
-
 from django.db.models import Prefetch
 
 @login_required
@@ -658,7 +652,7 @@ def admin_walkin(request):
             return redirect('admin_walkin')
 
         try:
-            check_in = datetime.strptime(check_in, "%Y-%m-%d").date()
+            check_in  = datetime.strptime(check_in,  "%Y-%m-%d").date()
             check_out = datetime.strptime(check_out, "%Y-%m-%d").date()
         except ValueError:
             messages.error(request, "Invalid date format.")
@@ -679,8 +673,9 @@ def admin_walkin(request):
             messages.error(request, "This room is already booked for the selected dates.")
             return redirect('admin_walkin')
 
-        nights = (check_out - check_in).days
+        nights      = (check_out - check_in).days
         total_price = room.price * nights
+        downpayment = total_price / 2
 
         Booking.objects.create(
             room=room.room_type,
@@ -691,6 +686,9 @@ def admin_walkin(request):
             check_out_date=check_out,
             guests=guests,
             price=room.price,
+            nights=nights,
+            total_price=total_price,
+            downpayment=downpayment,
             status='Confirmed'
         )
 
@@ -702,7 +700,6 @@ def admin_walkin(request):
     })
 
 
-# ✅ THIS MUST BE OUTSIDE admin_walkin
 def room_images(request, room_id):
 
     room = get_object_or_404(Room, id=room_id)
@@ -716,7 +713,6 @@ def room_images(request, room_id):
     return JsonResponse(data)
 
 
-# ✅ THIS MUST ALSO BE OUTSIDE
 def room_booked_dates(request, room_id):
 
     room = get_object_or_404(Room, id=room_id)
@@ -730,7 +726,7 @@ def room_booked_dates(request, room_id):
 
     for booking in bookings:
 
-        current = booking.check_in_date
+        current    = booking.check_in_date
         last_night = booking.check_out_date - timedelta(days=1)
 
         while current <= last_night:

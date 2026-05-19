@@ -30,6 +30,33 @@ href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     border-radius: 6px;
 }
 
+/* DOWNPAYMENT HIGHLIGHT */
+.downpayment-block {
+    background: #f0faf4;
+    border: 1px solid #a8d5b5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 4px;
+}
+
+.downpayment-block .dp-label {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.downpayment-block .dp-amount {
+    font-weight: bold;
+    font-size: 18px;
+    color: #2a7a4b;
+}
+
+.downpayment-block .dp-note {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -211,13 +238,26 @@ href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
                 <!-- TOTAL -->
                 <div class="field">
 
-                    <label>Total Price</label>
+                    <label>Total Amount</label>
 
                     <div id="totalPrice"
                          style="font-weight:bold; font-size:18px;">
 
                         ₱0
 
+                    </div>
+
+                </div>
+
+                <!-- DOWNPAYMENT -->
+                <div class="field">
+
+                    <label>Downpayment Required</label>
+
+                    <div class="downpayment-block">
+                        <div class="dp-label">50% of Total</div>
+                        <div class="dp-amount" id="downpaymentDisplay">₱0</div>
+                        <div class="dp-note">Remaining balance due upon check-in</div>
                     </div>
 
                 </div>
@@ -466,7 +506,7 @@ checkIn = flatpickr("#datePicker", {
 
 
 /* =========================================
-   TOTAL PRICE
+   TOTAL PRICE + DOWNPAYMENT
 ========================================= */
 function getNights() {
 
@@ -492,13 +532,18 @@ function calculateTotal() {
 
     if (!nights) {
         document.getElementById("totalPrice").innerText = "₱0";
+        document.getElementById("downpaymentDisplay").innerText = "₱0";
         return 0;
     }
 
-    const total = price * nights;
+    const total       = price * nights;
+    const downpayment = total / 2;
 
     document.getElementById("totalPrice").innerText =
         "₱" + total.toLocaleString() + " (" + nights + " nights)";
+
+    document.getElementById("downpaymentDisplay").innerText =
+        "₱" + downpayment.toLocaleString();
 
     return total;
 }
@@ -510,6 +555,9 @@ function calculateTotal() {
 function bookNow(event) {
 
     event.preventDefault();
+
+    const total       = calculateTotal();
+    const downpayment = total / 2;
 
     fetch("/api/book-room/", {
 
@@ -543,7 +591,10 @@ function bookNow(event) {
                 document.getElementById("guests").value,
 
             total_price:
-                calculateTotal()
+                total,
+
+            downpayment:
+                downpayment
         })
     })
 
@@ -553,7 +604,7 @@ function bookNow(event) {
 
         if (data.status === "success") {
 
-            alert("Booking Successful!");
+            alert("Booking Successful! Downpayment due: ₱" + downpayment.toLocaleString());
 
             window.location.href = "/rooms/";
 
