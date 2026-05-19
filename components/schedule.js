@@ -13,7 +13,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navbar from './navbar';
 
-const APP_URL = 'http://192.168.1.33:8000';
+const APP_URL = 'http://192.168.1.36:8000';
 
 // ─────────────────────────────────────────────
 // STATUS helpers
@@ -43,14 +43,26 @@ const BookingCard = ({ item }) => (
 
     {/* Details row */}
     <View style={styles.cardDetails}>
-      <Text style={styles.metaText}>📅 Check-in: {item.check_in_date}</Text>
+      <Text style={styles.metaText}>Check-in: {item.check_in_date}</Text>
       {!!item.check_out_date && (
-        <Text style={styles.metaText}>🏁 Check-out: {item.check_out_date}</Text>
+        <Text style={styles.metaText}>Check-out: {item.check_out_date}</Text>
       )}
-      <Text style={styles.metaText}>👥 Guests: {item.guests}</Text>
+      <Text style={styles.metaText}>Guests: {item.guests}</Text>
       <Text style={styles.metaText}>
-        💰 Total: ₱{Number(item.price).toLocaleString()}
-      </Text>
+  Price per Night: ₱{Number(item.price).toLocaleString()}
+</Text>
+
+<Text style={styles.metaText}>
+  Nights: {item.nights}
+</Text>
+
+<Text style={styles.metaText}>
+  Total Price: ₱{Number(item.total_price).toLocaleString()}
+</Text>
+
+<Text style={styles.metaText}>
+  Downpayment: ₱{Number(item.downpayment).toLocaleString()}
+</Text>
     </View>
   </View>
 );

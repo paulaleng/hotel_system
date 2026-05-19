@@ -16,7 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 // =========================
 // ✅ CHANGE THIS TO YOUR IP
 // =========================
-const APP_URL = 'http://192.168.1.33:8000';
+const APP_URL = 'http://192.168.1.36:8000';
 
 export default function Rooms() {
   const [search, setSearch] = useState('');

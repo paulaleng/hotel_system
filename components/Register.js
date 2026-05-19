@@ -12,7 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
-const APP_URL = 'http://192.168.1.33:8000';
+const APP_URL = 'http://192.168.1.36:8000';
 
 export default function Register() {
   const navigation = useNavigation();

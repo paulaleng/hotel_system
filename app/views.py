@@ -386,6 +386,9 @@ def _booking_to_dict(b):
         "check_out_date": str(b.check_out_date) if b.check_out_date else "",
         "guests":         b.guests,
         "price":          str(b.price),
+        "nights":         b.nights,
+        "total_price":    str(b.total_price),
+        "downpayment":    str(b.downpayment),
         "status":         b.status,
         "created_at":     b.created_at.strftime("%Y-%m-%d %H:%M:%S"),
     }
@@ -694,58 +697,99 @@ def book_room(request):
         return JsonResponse({"status": "error", "message": "Invalid method"})
     try:
         data = json.loads(request.body)
-        user = get_user_from_token(request)  # optional — links booking if logged in
+        user = get_user_from_token(request)
+
+        # ── Calculate server-side ──────────────────────────
+        from datetime import datetime
+        from .models import Room
+
+        room_obj = Room.objects.filter(
+            room_type__iexact=data.get("room")
+        ).first()
+
+        if not room_obj:
+            return JsonResponse({"status": "error", "message": "Room not found"})
+
+        check_in  = datetime.strptime(data.get("check_in_date"),  "%Y-%m-%d").date()
+        check_out = datetime.strptime(data.get("check_out_date"), "%Y-%m-%d").date()
+
+        nights      = max((check_out - check_in).days, 1)
+        total_price = room_obj.price * nights
+        downpayment = total_price / 2
+
+        # ── Overlap check ──────────────────────────────────
+        conflict = Booking.objects.filter(
+            room__iexact=data.get("room"),
+            status="Confirmed",
+            check_in_date__lt=check_out,
+            check_out_date__gt=check_in
+        ).exists()
+
+        if conflict:
+            return JsonResponse({
+                "status": "error",
+                "message": "Room is already booked for selected dates"
+            })
 
         Booking.objects.create(
             user           = user,
-            room           = data.get("room"),
+            room           = room_obj.room_type,
             full_name      = data.get("full_name"),
             contact_number = data.get("contact_number"),
             email          = data.get("email"),
-            check_in_date  = data.get("check_in_date"),
-            check_out_date = data.get("check_out_date"),
+            check_in_date  = check_in,
+            check_out_date = check_out,
             guests         = data.get("guests"),
-            price          = data.get("price"),
+            price          = room_obj.price,
+            nights         = nights,
+            total_price    = total_price,
+            downpayment    = downpayment,
             status         = 'Pending',
         )
 
-        subject = "🏨 Booking Confirmed - Grand Solace Hotel"
-
+        subject = " Booking Confirmed - Grand Solace Hotel"
         message = f"""
-        Dear {data.get('full_name')},
+Dear {data.get('full_name')},
 
-        ✨ Warm greetings from Grand Solace Hotel!
+ Warm greetings from Grand Solace Hotel!
 
-        We are delighted to confirm your reservation with us. Thank you for choosing Grand Solace Hotel for your upcoming stay.
+ Booking Details:
+Hotel: Grand Solace Hotel
+Room: {room_obj.room_type}
+Check-in: {check_in}
+Check-out: {check_out}
+Guests: {data.get('guests')}
+Nights: {nights}
+Total Price: ₱{total_price:,.2f}
+Downpayment (50%%): ₱{downpayment:,.2f}
 
-        📌 Booking Details:
-        🏨 Hotel: Grand Solace Hotel
-        🛏 Room: {data.get('room')}
-        📅 Check-in: {data.get('check_in_date')}
-        📅 Check-out: {data.get('check_out_date')}
-        👥 Guests: {data.get('guests')}
+Please settle the downpayment to confirm your reservation.
+Remaining balance is due upon check-in.
 
-        We are committed to providing you with a comfortable, relaxing, and memorable experience.
+We look forward to welcoming you!
 
-        If you have any special requests or need assistance before your arrival, feel free to contact us anytime.
-
-        We look forward to welcoming you soon at Grand Solace Hotel. ✨
-
-        Best regards,  
-        Grand Solace Hotel Team
+Best regards,
+Grand Solace Hotel Team
         """
 
         send_mail(
             subject,
             message,
             "yourgmail@gmail.com",
-            [data.get('email')],
+            [data.get("email")],
             fail_silently=False,
         )
-        return JsonResponse({"status": "success", "message": "Booking saved successfully"})
+
+        return JsonResponse({
+            "status":      "success",
+            "message":     "Booking saved successfully",
+            "nights":      nights,
+            "total_price": float(total_price),
+            "downpayment": float(downpayment),
+        })
+
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)})
-
 
 otp_storage = {}
 

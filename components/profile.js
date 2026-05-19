@@ -15,7 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
-const APP_URL = 'http://192.168.1.33:8000';
+const APP_URL = 'http://192.168.1.36:8000';
 
 // ─────────────────────────────────────────────
 // INFO ROW – shows a label + value (or input)

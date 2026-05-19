@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-const APP_URL = 'http://192.168.100.13:8000';
+const APP_URL = 'http://192.168.1.36:8000';
 
 export default function OTP({ route, navigation }) {
 
